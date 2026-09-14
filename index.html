@@ -7,41 +7,43 @@
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
   <link rel="apple-touch-icon" href="logo.png">
   <style>
-    :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.8); --primary: #3b82f6; --success: #10b981; --text: #f8fafc; }
+    :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.8); --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --text: #f8fafc; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
     body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     
-    /* Top Bar */
     header { background: var(--panel); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); z-index: 10; }
     header h1 { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
     #live-clock { font-size: 0.9rem; color: #94a3b8; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-    /* Main Content */
-    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 15px; overflow-y: auto; padding-bottom: 100px; }
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 15px; overflow-y: auto; padding-bottom: 120px; }
     
-    /* Video Container */
     #video-container { position: relative; width: 100%; max-width: 480px; aspect-ratio: 3/4; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
     video { width: 100%; height: 100%; object-fit: cover; }
     
-    /* Status Panel */
     .status-panel { width: 100%; max-width: 480px; background: var(--panel); margin-top: 15px; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
     #status { font-size: 0.9rem; color: #fbbf24; text-align: left; font-weight: 600; line-height: 1.4; display: flex; align-items: center; gap: 8px; }
     
-    /* Bottom Action Bar */
+    /* Install Banner */
+    #install-banner { display: none; width: 100%; max-width: 480px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); margin-bottom: 15px; padding: 12px 16px; border-radius: 12px; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+    #install-banner span { font-size: 0.85rem; font-weight: 600; color: #fff; }
+    #install-btn { background: #fff; color: #1e293b; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; text-transform: uppercase; }
+
     .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--panel); padding: 15px 20px 25px 20px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 10; }
     
-    /* Buttons */
-    .btn { width: 100%; max-width: 480px; padding: 16px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn { width: 100%; max-width: 480px; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 8px; }
     .btn:active { transform: scale(0.97); }
     
     .btn-row { display: flex; gap: 10px; width: 100%; max-width: 480px; }
     .btn-switch { background-color: #334155; color: white; flex: 1; }
     .btn-capture { background-color: var(--success); color: white; flex: 2; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
-    .btn-download { background-color: var(--primary); color: white; display: none; margin-top: 5px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+    
+    .btn-action-row { display: none; width: 100%; max-width: 480px; gap: 10px; }
+    .btn-retake { background-color: #475569; color: white; flex: 1; }
+    .btn-download { background-color: var(--primary); color: white; flex: 2; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
 
-    /* Hidden Elements */
     #preview-container { width: 100%; max-width: 480px; margin-top: 15px; display: none; }
     canvas { width: 100%; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
   </style>
@@ -49,11 +51,17 @@
 <body>
 
   <header>
-    <h1>🛡️ Platoon Digital Patrol </h1>
+    <h1>🛡️ Platoon Digital Patrol</h1>
     <div id="live-clock">00:00:00</div>
   </header>
 
   <main>
+    <!-- Install Banner for Web App Conversion -->
+    <div id="install-banner">
+      <span>📲 Install App for Full Experience</span>
+      <button id="install-btn" onclick="installApp()">Install</button>
+    </div>
+
     <div id="video-container">
       <video id="video" autoplay playsinline muted></video>
     </div>
@@ -68,14 +76,43 @@
   </main>
 
   <div class="action-bar">
-    <div class="btn-row">
+    <div class="btn-row" id="cameraControls">
       <button class="btn btn-switch" id="switchBtn" onclick="toggleCamera()">🔄 Flip</button>
       <button class="btn btn-capture" id="captureBtn" onclick="takeSnapshot()">📸 Capture</button>
     </div>
-    <button class="btn btn-download" id="downloadBtn" onclick="shareImage()">🚀 Share to WhatsApp</button>
+    <div class="btn-action-row" id="previewControls">
+      <button class="btn btn-retake" onclick="resetCamera()">🔄 Retake</button>
+      <button class="btn btn-download" id="downloadBtn" onclick="shareImage()">🚀 Share WhatsApp</button>
+    </div>
   </div>
 
   <script>
+    let deferredPrompt;
+    const installBanner = document.getElementById('install-banner');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.style.display = 'flex'; // Show install banner if not installed
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            installBanner.style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    // Check if app is already running in standalone (App) mode
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      installBanner.style.display = 'none'; // Hide install banner since it's already running as an app
+    }
+
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const statusText = document.getElementById('status');
@@ -83,7 +120,6 @@
     
     let currentLat = "0.00000";
     let currentLon = "0.00000";
-    let currentAddress = "Locating...";
     let logoImage = new Image();
     
     logoImage.crossOrigin = "anonymous";
@@ -92,11 +128,23 @@
     let currentFacingMode = "environment"; 
     let currentStream = null;
 
-    // Run Live Clock
+    async function syncInternetTime() {
+      try {
+        let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
+        let data = await response.json();
+        window.exactServerTime = data && data.datetime ? new Date(data.datetime) : new Date();
+      } catch(e) {
+        window.exactServerTime = new Date();
+      }
+    }
+    syncInternetTime();
+    setInterval(syncInternetTime, 60000);
+
     setInterval(() => {
-      const now = new Date();
+      const now = window.exactServerTime ? new Date(window.exactServerTime.getTime() + (new Date() - window.lastSyncMark || 0)) : new Date();
       document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
     }, 1000);
+    window.lastSyncMark = new Date();
 
     function drawRoundRect(ctx, x, y, width, height, radius) {
       ctx.beginPath();
@@ -124,40 +172,21 @@
       startCamera();
     }
 
+    function resetCamera() {
+      document.getElementById('preview-container').style.display = 'none';
+      document.getElementById('video-container').style.display = 'block';
+      document.getElementById('previewControls').style.display = 'none';
+      document.getElementById('cameraControls').style.display = 'flex';
+      statusText.innerHTML = `🟢 <b>App Mode Active:</b> Ready`;
+      startCamera();
+    }
+
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
-        async (pos) => {
-          currentLat = pos.coords.latitude.toFixed(5);
-          currentLon = pos.coords.longitude.toFixed(5);
-          statusText.innerHTML = "📡 <b>GPS Locked.</b> Fetching Address...";
-
-          try {
-            let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=18&addressdetails=1`);
-            let data = await response.json();
-            
-            if(data && data.address) {
-                // Dynamically fetch available address parts instead of hardcoding
-                let local = data.address.amenity || data.address.road || data.address.neighbourhood || data.address.suburb || "";
-                let city = data.address.city || data.address.town || data.address.village || data.address.county || "";
-                let state = data.address.state || "";
-                
-                // Filter out empty parts and join them smoothly
-                let addressParts = [local, city, state].filter(part => part !== "");
-                
-                if (addressParts.length > 0) {
-                    currentAddress = addressParts.join(", ");
-                } else if (data.display_name) {
-                    // Fallback to the raw display name if specific parts fail
-                    currentAddress = data.display_name.split(",").slice(0, 2).join(", ");
-                } else {
-                    currentAddress = `Lat: ${currentLat}, Lon: ${currentLon}`;
-                }
-                
-                statusText.innerHTML = `🟢 <b>Secured:</b> ${currentAddress}`;
-            }
-          } catch(e) {
-            currentAddress = `Lat: ${currentLat}, Lon: ${currentLon}`;
-          }
+        (pos) => {
+          currentLat = pos.coords.latitude.toFixed(6);
+          currentLon = pos.coords.longitude.toFixed(6);
+          statusText.innerHTML = `🟢 <b>GPS Locked:</b> ${currentLat}° N, ${currentLon}° E`;
         },
         (err) => {
           statusText.innerHTML = "⚠️ <b>GPS Error.</b> Turn on device Location Services.";
@@ -172,6 +201,8 @@
         
         document.getElementById('video-container').style.display = 'none';
         document.getElementById('preview-container').style.display = 'block';
+        document.getElementById('cameraControls').style.display = 'none';
+        document.getElementById('previewControls').style.display = 'flex';
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -190,11 +221,11 @@
         } catch (e) { console.log("Logo skip"); }
 
         const pad = cw * 0.03;
-        const dashHeight = ch * 0.20; 
+        const dashHeight = ch * 0.22; 
         const dashY = ch - dashHeight - pad;
         const dashWidth = cw - (pad * 2);
 
-        ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; 
+        ctx.fillStyle = "rgba(15, 23, 42, 0.90)"; 
         drawRoundRect(ctx, pad, dashY, dashWidth, dashHeight, 12);
         ctx.fill();
         ctx.lineWidth = 2;
@@ -209,16 +240,16 @@
         ctx.fill();
 
         ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${cw * 0.025}px Arial`;
+        ctx.font = `bold ${cw * 0.022}px 'Courier New', monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("Duty Patrol", pad + 10 + (leftPanelWidth/2), dashY + 10 + (badgeHeight/2));
+        ctx.fillText("PATROL APP", pad + 10 + (leftPanelWidth/2), dashY + 10 + (badgeHeight/2));
 
         ctx.font = `${cw * 0.08}px Arial`;
         ctx.fillText("📍", pad + 10 + (leftPanelWidth/2), dashY + 10 + badgeHeight + (dashHeight*0.25));
         
         ctx.fillStyle = "#10b981"; 
-        ctx.font = `bold ${cw * 0.02}px Arial`;
+        ctx.font = `bold ${cw * 0.018}px 'Courier New', monospace`;
         ctx.fillText("SECURE", pad + 10 + (leftPanelWidth/2), dashY + 10 + badgeHeight + (dashHeight*0.48));
 
         const textX = pad + 10 + leftPanelWidth + 15;
@@ -230,49 +261,41 @@
         ctx.textBaseline = "alphabetic";
 
         ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${cw * 0.035}px Arial`;
+        ctx.font = `bold ${cw * 0.035}px 'Courier New', monospace`;
         ctx.fillText("Platoon Securitas", textX, textY);
 
         textY += spacing;
-        ctx.font = `normal ${baseFont}px Arial`;
-        ctx.fillStyle = "#cbd5e1";
-        ctx.fillText(currentAddress.substring(0, 42) + (currentAddress.length > 42 ? "..." : ""), textX, textY);
+        ctx.font = `bold ${baseFont}px 'Courier New', monospace`;
+        ctx.fillStyle = "#34d399";
+        ctx.fillText(`GPS: ${currentLat}° N, ${currentLon}° E`, textX, textY);
 
         textY += spacing;
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+        const now = window.exactServerTime ? new Date(window.exactServerTime) : new Date();
+        const dateStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
         const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
-        ctx.font = `bold ${baseFont}px Arial`;
+        ctx.font = `bold ${baseFont}px 'Courier New', monospace`;
         ctx.fillStyle = "#ffffff";
-        ctx.fillText(`${dateStr} - ${timeStr} IST`, textX, textY);
+        ctx.fillText(`NET TIME: ${dateStr} - ${timeStr} IST`, textX, textY);
 
         textY += spacing;
-        ctx.font = `normal ${cw * 0.022}px Arial`;
+        ctx.font = `normal ${cw * 0.022}px 'Courier New', monospace`;
         ctx.fillStyle = "#f8fafc";
-        ctx.fillText(`${currentLat}° N   ${currentLon}° E`, textX, textY);
+        ctx.fillText(`Encrypted Operational Node`, textX, textY);
 
-        textY += spacing * 1.2;
-        ctx.fillStyle = "#93c5fd";
-        ctx.fillText(`🎯 Acc: ±5m   🛡️ Verified   🔋 System Active`, textX, textY);
-
-        downloadBtn.style.display = 'flex';
-        statusText.innerHTML = "✅ <b>Success:</b> Image verified and ready.";
+        statusText.innerHTML = "✅ <b>Success:</b> App-secured photo ready.";
         
       } catch (err) {
-        statusText.innerHTML = "❌ <b>Capture Error.</b> Please refresh.";
+        statusText.innerHTML = "❌ <b>Capture Error.</b> Please press Retake.";
       }
     }
 
     async function shareImage() {
       canvas.toBlob(async (blob) => {
-        const file = new File([blob], `Platoon_CheckIn_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        const file = new File([blob], `Platoon_Patrol_${Date.now()}.jpg`, { type: 'image/jpeg' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({ files: [file], title: 'Duty Patrol Check-In' });
-            document.getElementById('preview-container').style.display = 'none';
-            document.getElementById('video-container').style.display = 'block';
-            downloadBtn.style.display = 'none';
-            statusText.innerHTML = `🟢 <b>Secured:</b> ${currentAddress}`;
+            resetCamera();
           } catch (error) { fallbackDownload(); }
         } else { fallbackDownload(); }
       }, 'image/jpeg', 0.95);
@@ -280,10 +303,10 @@
 
     function fallbackDownload() {
       const link = document.createElement('a');
-      link.download = `Platoon_CheckIn_${Date.now()}.jpg`;
+      link.download = `Platoon_Patrol_${Date.now()}.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.95);
       link.click();
-      statusText.innerHTML = "✅ <b>Saved to gallery!</b> Send to WhatsApp manually.";
+      statusText.innerHTML = "✅ <b>Saved!</b> Send to WhatsApp manually.";
     }
 
     startCamera();
