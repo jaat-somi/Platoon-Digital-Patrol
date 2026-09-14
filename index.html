@@ -65,7 +65,7 @@
     </div>
 
     <div class="status-panel">
-      <div id="status">⏳ Connecting to Secure Camera & GPS...</div>
+      <div id="status">⏳ Connecting to Camera & GPS...</div>
     </div>
 
     <div id="preview-container">
@@ -117,7 +117,8 @@
     let currentLat = "0.00000";
     let currentLon = "0.00000";
     let currentAddress = "Fetching area name...";
-    let addressFetched = false; // Prevents API spam
+    let isGpsLocked = false; // Prevents taking photo before GPS is ready
+    let addressFetched = false;
     let logoImage = new Image();
     
     logoImage.crossOrigin = "anonymous";
@@ -175,7 +176,7 @@
       document.getElementById('video-container').style.display = 'block';
       document.getElementById('previewControls').style.display = 'none';
       document.getElementById('cameraControls').style.display = 'flex';
-      statusText.innerHTML = `🟢 <b>Ready:</b> ${currentAddress}`;
+      statusText.innerHTML = isGpsLocked ? `🟢 <b>Ready:</b> ${currentAddress}` : "⏳ <b>Finding Location...</b>";
       startCamera();
     }
 
@@ -183,10 +184,10 @@
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
         async (pos) => {
+          isGpsLocked = true; // Lock confirmed
           currentLat = pos.coords.latitude.toFixed(6);
           currentLon = pos.coords.longitude.toFixed(6);
 
-          // Only fetch address from API ONCE to prevent hanging/blocking
           if (!addressFetched) {
             statusText.innerHTML = `📡 <b>GPS Locked:</b> Fetching location name...`;
             try {
@@ -201,23 +202,33 @@
                     currentAddress = data.display_name.split(",").slice(0, 2).join(", ");
                 }
               }
-              addressFetched = true; // Mark as successful so it doesn't fetch again
+              addressFetched = true;
             } catch(e) {
               currentAddress = "Unknown Location Node";
             }
           }
           
-          // Display the location on the screen before they capture
           statusText.innerHTML = `🟢 <b>Secured:</b> ${currentAddress}`;
         },
         (err) => {
-          statusText.innerHTML = "⚠️ <b>GPS Error:</b> Turn on device Location Services.";
+          // If it times out while trying to find high accuracy, just keep waiting politely
+          if (err.code === 3) {
+            statusText.innerHTML = "⏳ <b>GPS Search:</b> Finding satellites (Stay outdoors)...";
+          } else {
+            statusText.innerHTML = "⚠️ <b>GPS Error:</b> Turn on device Location Services.";
+          }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 } // Added timeout to prevent infinite hanging
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } 
       );
     }
 
     function takeSnapshot() {
+      // Guard Check: Prevent photo capture if GPS is not yet locked
+      if (!isGpsLocked) {
+        alert("कृपया GPS लोकेशन आने का इंतज़ार करें (2-3 सेकंड)।\nPlease wait for the GPS location to lock before capturing.");
+        return;
+      }
+
       try {
         if (video.videoWidth === 0) return;
         
