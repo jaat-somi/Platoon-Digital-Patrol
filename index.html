@@ -65,7 +65,7 @@
     </div>
 
     <div class="status-panel">
-      <div id="status">⏳ Initializing Secure Connection...</div>
+      <div id="status">⏳ Connecting to Secure Camera & GPS...</div>
     </div>
 
     <div id="preview-container">
@@ -113,11 +113,11 @@
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const statusText = document.getElementById('status');
-    const downloadBtn = document.getElementById('downloadBtn');
     
     let currentLat = "0.00000";
     let currentLon = "0.00000";
-    let currentAddress = "Locating place name...";
+    let currentAddress = "Fetching area name...";
+    let addressFetched = false; // Prevents API spam
     let logoImage = new Image();
     
     logoImage.crossOrigin = "anonymous";
@@ -161,7 +161,7 @@
         currentStream = stream;
         video.srcObject = stream;
       } catch (err) {
-        statusText.innerHTML = "❌ <b>Camera Blocked.</b> Please check browser permissions.";
+        statusText.innerHTML = "❌ <b>Camera Blocked.</b> Please allow camera access.";
       }
     }
 
@@ -175,39 +175,45 @@
       document.getElementById('video-container').style.display = 'block';
       document.getElementById('previewControls').style.display = 'none';
       document.getElementById('cameraControls').style.display = 'flex';
-      statusText.innerHTML = `🟢 <b>App Mode Active:</b> Ready`;
+      statusText.innerHTML = `🟢 <b>Ready:</b> ${currentAddress}`;
       startCamera();
     }
 
+    // GPS & Address Fetching Logic
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
         async (pos) => {
           currentLat = pos.coords.latitude.toFixed(6);
           currentLon = pos.coords.longitude.toFixed(6);
-          statusText.innerHTML = `📡 <b>GPS Locked:</b> Getting location name...`;
 
-          try {
-            let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=16&addressdetails=1`);
-            let data = await response.json();
-            
-            if(data && data.address) {
-              let place = data.address.suburb || data.address.village || data.address.town || data.address.city || data.address.county || "";
-              let state = data.address.state || "";
-              currentAddress = [place, state].filter(Boolean).join(", ");
-              if(!currentAddress) currentAddress = data.display_name.split(",").slice(0, 2).join(",");
-            } else {
-              currentAddress = "Pan-India Location Node";
+          // Only fetch address from API ONCE to prevent hanging/blocking
+          if (!addressFetched) {
+            statusText.innerHTML = `📡 <b>GPS Locked:</b> Fetching location name...`;
+            try {
+              let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=16&addressdetails=1`);
+              let data = await response.json();
+              
+              if(data && data.address) {
+                let place = data.address.suburb || data.address.village || data.address.town || data.address.city || data.address.county || "";
+                let state = data.address.state || "";
+                currentAddress = [place, state].filter(Boolean).join(", ");
+                if(!currentAddress && data.display_name) {
+                    currentAddress = data.display_name.split(",").slice(0, 2).join(", ");
+                }
+              }
+              addressFetched = true; // Mark as successful so it doesn't fetch again
+            } catch(e) {
+              currentAddress = "Unknown Location Node";
             }
-          } catch(e) {
-            currentAddress = "GPS Active Node";
           }
           
+          // Display the location on the screen before they capture
           statusText.innerHTML = `🟢 <b>Secured:</b> ${currentAddress}`;
         },
         (err) => {
-          statusText.innerHTML = "⚠️ <b>GPS Error.</b> Turn on device Location Services.";
+          statusText.innerHTML = "⚠️ <b>GPS Error:</b> Turn on device Location Services.";
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 } // Added timeout to prevent infinite hanging
       );
     }
 
@@ -299,7 +305,7 @@
         ctx.fillStyle = "#f8fafc";
         ctx.fillText(`GPS: ${currentLat}° N, ${currentLon}° E`, textX, textY);
 
-        statusText.innerHTML = "✅ <b>Success:</b> Location name and internet-timed photo ready.";
+        statusText.innerHTML = "✅ <b>Success:</b> Photo ready to share.";
         
       } catch (err) {
         statusText.innerHTML = "❌ <b>Capture Error.</b> Please press Retake.";
