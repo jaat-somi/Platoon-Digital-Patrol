@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Platoon Digital Patrol</title>
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,34 +21,136 @@
       --muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
-    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     
-    header { background: var(--panel); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); z-index: 10; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    
+    header {
+      background: var(--panel);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+      z-index: 10;
+    }
     header .brand-title { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; font-weight: 800; color: #fff; letter-spacing: 0.3px; }
     header .brand-title span { color: var(--accent); }
-    #live-clock { font-size: 0.85rem; color: #cbd5e1; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+    #live-clock { font-size: 0.82rem; color: #cbd5e1; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
 
-    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; padding-bottom: 105px; }
+    /* Middle Content: Dynamically fits between header and action-bar */
+    main {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
     
-    #viewfinder-wrapper { position: relative; width: 100%; max-width: 460px; aspect-ratio: 3/4; background: #000; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
+    #viewfinder-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      flex: 1;
+      min-height: 0;
+      max-height: 100%;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     video { width: 100%; height: 100%; object-fit: cover; }
 
     /* Live Recording Indicator */
-    #recording-indicator { display: none; position: absolute; top: 14px; left: 14px; background: rgba(239, 68, 68, 0.95); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(239,68,68,0.6); z-index: 5; animation: pulseRed 1s infinite; }
-    .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+    #recording-indicator { display: none; position: absolute; top: 12px; left: 12px; background: rgba(239, 68, 68, 0.95); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.5px; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(239,68,68,0.6); z-index: 5; animation: pulseRed 1s infinite; }
+    .rec-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; }
     @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-    .status-panel { width: 100%; max-width: 460px; background: var(--panel); margin-top: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); }
-    #status { font-size: 0.85rem; color: #fbbf24; text-align: left; font-weight: 600; line-height: 1.35; display: flex; align-items: center; gap: 8px; }
+    .status-panel {
+      width: 100%;
+      max-width: 440px;
+      background: var(--panel);
+      margin-top: 6px;
+      padding: 7px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+      flex-shrink: 0;
+    }
+    #status { font-size: 0.82rem; color: #fbbf24; text-align: left; font-weight: 600; line-height: 1.3; display: flex; align-items: center; gap: 8px; }
     
-    #install-banner { display: none; width: 100%; max-width: 460px; background: linear-gradient(135deg, #1e40af, #3b82f6); margin-bottom: 8px; padding: 10px 14px; border-radius: 12px; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
-    #install-banner span { font-size: 0.82rem; font-weight: 700; color: #fff; }
-    #install-btn { background: #fff; color: #1e3a8a; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; }
+    #install-banner { display: none; width: 100%; max-width: 440px; background: linear-gradient(135deg, #1e40af, #3b82f6); margin-bottom: 6px; padding: 8px 12px; border-radius: 10px; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); flex-shrink: 0; }
+    #install-banner span { font-size: 0.80rem; font-weight: 700; color: #fff; }
+    #install-btn { background: #fff; color: #1e3a8a; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 800; font-size: 0.72rem; cursor: pointer; text-transform: uppercase; }
+
+    /* PREVIEW CONTAINER: Dynamically auto-fits the photo canvas to screen */
+    #preview-container {
+      width: 100%;
+      max-width: 440px;
+      flex: 1;
+      min-height: 0;
+      max-height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.65);
+      display: none;
+    }
+    #videoPreview {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.65);
+      display: none;
+      background: #000;
+    }
 
     /* Controls Action Bar */
-    .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 15, 29, 0.94); padding: 12px 18px 20px 18px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 20; }
+    .action-bar {
+      flex-shrink: 0;
+      width: 100%;
+      background: rgba(10, 15, 29, 0.94);
+      padding: 10px 16px 16px 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      z-index: 20;
+    }
     
-    .btn-row { display: flex; gap: 10px; width: 100%; max-width: 460px; align-items: center; }
+    .btn-row { display: flex; gap: 10px; width: 100%; max-width: 440px; align-items: center; }
     
     /* Compact circular flip button */
     .btn-flip { width: 48px; height: 48px; border-radius: 50%; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center; align-items: center; font-size: 1.25rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, background 0.2s; }
@@ -64,14 +166,10 @@
     @keyframes pulseStop { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); } }
 
     /* Preview controls: WhatsApp only */
-    .btn-action-row { display: none; width: 100%; max-width: 460px; gap: 10px; }
+    .btn-action-row { display: none; width: 100%; max-width: 440px; gap: 10px; }
     .btn-retake { flex: 1; height: 50px; background: #334155; color: white; border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
     .btn-whatsapp { flex: 2.2; height: 50px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.45); text-transform: uppercase; letter-spacing: 0.3px; }
     .btn-whatsapp:active { transform: scale(0.97); }
-
-    #preview-container { width: 100%; max-width: 460px; display: none; }
-    canvas { width: 100%; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; }
-    #videoPreview { width: 100%; aspect-ratio: 3/4; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); object-fit: cover; display: none; background: #000; }
   </style>
 </head>
 <body>
@@ -98,11 +196,11 @@
       <video id="video" autoplay playsinline muted></video>
     </div>
 
-    <div class="status-panel">
+    <div class="status-panel" id="statusPanel">
       <div id="status">⏳ Connecting to Camera & GPS...</div>
     </div>
 
-    <!-- Preview Container (Photo Canvas or Video Player) -->
+    <!-- Preview Container (Dynamically scaled to fit visible screen) -->
     <div id="preview-container">
       <canvas id="canvas"></canvas>
       <video id="videoPreview" controls playsinline></video>
@@ -174,6 +272,7 @@
     const recCanvas = document.getElementById('recCanvas');
     const videoPreview = document.getElementById('videoPreview');
     const statusText = document.getElementById('status');
+    const statusPanel = document.getElementById('statusPanel');
     const liveClock = document.getElementById('live-clock');
     const recIndicator = document.getElementById('recording-indicator');
     const recTimer = document.getElementById('rec-timer');
@@ -256,7 +355,7 @@
       liveClock.innerText = `${timeStr} GMT +05:30`;
     }, 1000);
 
-    // Bulletproof Rounded Rectangle Helper (Natively supported or fallback)
+    // Bulletproof Rounded Rectangle Helper
     function drawRoundRect(ctx, x, y, width, height, radius) {
       if (typeof ctx.roundRect === 'function') {
         ctx.beginPath();
@@ -294,7 +393,6 @@
         currentStream = stream;
         video.srcObject = stream;
       } catch (err) {
-        // Fallback without audio if mic access blocked
         try {
           const streamNoAudio = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -314,7 +412,8 @@
     }
 
     function resetCamera() {
-      document.getElementById('viewfinder-wrapper').style.display = 'block';
+      document.getElementById('viewfinder-wrapper').style.display = 'flex';
+      statusPanel.style.display = 'block';
       document.getElementById('preview-container').style.display = 'none';
       canvas.style.display = 'none';
       videoPreview.style.display = 'none';
@@ -374,7 +473,6 @@
                 let country = data.address.country || "India";
                 let pincode = data.address.postcode || "";
 
-                // Headline: e.g. "Tosham Rural, Haryana, India" or "MK Hospital, Bamla"
                 if (specific && place && specific !== place) {
                   currentHeadline = `${specific}, ${place}`;
                 } else if (place && state) {
@@ -383,7 +481,6 @@
                   currentHeadline = place || state || "Patrol Location";
                 }
 
-                // Sub-address line: e.g. "Tosham Rural, Haryana 127040, India"
                 let subParts = [];
                 if (specific && specific !== currentHeadline) subParts.push(specific);
                 if (place) subParts.push(place);
@@ -585,8 +682,11 @@
         if (video.videoWidth === 0) return;
         
         currentPreviewType = 'photo';
+        
+        // Switch UI to preview mode: Hide viewfinder and status panel, show auto-fitting preview container
         document.getElementById('viewfinder-wrapper').style.display = 'none';
-        document.getElementById('preview-container').style.display = 'block';
+        statusPanel.style.display = 'none';
+        document.getElementById('preview-container').style.display = 'flex';
         canvas.style.display = 'block';
         videoPreview.style.display = 'none';
         document.getElementById('cameraControls').style.display = 'none';
@@ -749,8 +849,11 @@
 
     function showVideoPreview(blob) {
       currentPreviewType = 'video';
+      
+      // Switch UI to preview mode: Hide viewfinder and status panel, show auto-fitting preview container
       document.getElementById('viewfinder-wrapper').style.display = 'none';
-      document.getElementById('preview-container').style.display = 'block';
+      statusPanel.style.display = 'none';
+      document.getElementById('preview-container').style.display = 'flex';
       canvas.style.display = 'none';
       videoPreview.style.display = 'block';
       videoPreview.src = URL.createObjectURL(blob);
