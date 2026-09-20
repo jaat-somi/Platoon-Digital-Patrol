@@ -12,7 +12,7 @@
   <style>
     :root {
       --bg: #070b14;
-      --panel: rgba(15, 23, 42, 0.85);
+      --panel: rgba(15, 23, 42, 0.90);
       --primary: #2563eb;
       --success: #10b981;
       --danger: #ef4444;
@@ -26,47 +26,47 @@
     header { background: var(--panel); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); z-index: 10; }
     header .brand-title { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; font-weight: 800; color: #fff; letter-spacing: 0.3px; }
     header .brand-title span { color: var(--accent); }
-    #live-clock { font-size: 0.88rem; color: #cbd5e1; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+    #live-clock { font-size: 0.85rem; color: #cbd5e1; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
 
-    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; overflow-y: auto; padding-bottom: 110px; }
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; padding-bottom: 105px; }
     
     #viewfinder-wrapper { position: relative; width: 100%; max-width: 460px; aspect-ratio: 3/4; background: #000; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
     video { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Live Recording Badge */
-    #recording-indicator { display: none; position: absolute; top: 14px; left: 14px; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(239,68,68,0.5); z-index: 5; animation: pulseRed 1.2s infinite; }
+    /* Live Recording Indicator */
+    #recording-indicator { display: none; position: absolute; top: 14px; left: 14px; background: rgba(239, 68, 68, 0.95); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(239,68,68,0.6); z-index: 5; animation: pulseRed 1s infinite; }
     .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; }
-    @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
+    @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
     .status-panel { width: 100%; max-width: 460px; background: var(--panel); margin-top: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); }
     #status { font-size: 0.85rem; color: #fbbf24; text-align: left; font-weight: 600; line-height: 1.35; display: flex; align-items: center; gap: 8px; }
     
-    #install-banner { display: none; width: 100%; max-width: 460px; background: linear-gradient(135deg, #1e40af, #3b82f6); margin-bottom: 10px; padding: 10px 14px; border-radius: 12px; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
+    #install-banner { display: none; width: 100%; max-width: 460px; background: linear-gradient(135deg, #1e40af, #3b82f6); margin-bottom: 8px; padding: 10px 14px; border-radius: 12px; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
     #install-banner span { font-size: 0.82rem; font-weight: 700; color: #fff; }
     #install-btn { background: #fff; color: #1e3a8a; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; }
 
     /* Controls Action Bar */
-    .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 15, 29, 0.92); padding: 14px 20px 22px 20px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 20; }
+    .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 15, 29, 0.94); padding: 12px 18px 20px 18px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 20; }
     
     .btn-row { display: flex; gap: 10px; width: 100%; max-width: 460px; align-items: center; }
     
-    /* Small circular flip button */
-    .btn-flip { width: 50px; height: 50px; border-radius: 50%; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center; align-items: center; font-size: 1.25rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, background 0.2s; }
+    /* Compact circular flip button */
+    .btn-flip { width: 48px; height: 48px; border-radius: 50%; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center; align-items: center; font-size: 1.25rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, background 0.2s; }
     .btn-flip:active { transform: rotate(180deg) scale(0.92); background: #334155; }
     
-    .btn-capture { flex: 1; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); text-transform: uppercase; letter-spacing: 0.3px; }
+    .btn-capture { flex: 1; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); text-transform: uppercase; letter-spacing: 0.3px; }
     .btn-capture:active { transform: scale(0.97); }
 
-    .btn-record { flex: 1; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); text-transform: uppercase; letter-spacing: 0.3px; }
+    .btn-record { flex: 1; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); text-transform: uppercase; letter-spacing: 0.3px; }
     .btn-record:active { transform: scale(0.97); }
 
-    .btn-stop-rec { width: 100%; height: 52px; border-radius: 14px; background: #ef4444; color: white; border: 2px solid rgba(255,255,255,0.2); font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(239,68,68,0.6); animation: pulseStop 1.5s infinite; }
+    .btn-stop-rec { width: 100%; height: 50px; border-radius: 14px; background: #ef4444; color: white; border: 2px solid rgba(255,255,255,0.25); font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(239,68,68,0.6); animation: pulseStop 1.5s infinite; }
     @keyframes pulseStop { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); } }
 
-    /* Preview controls */
+    /* Preview controls: WhatsApp only */
     .btn-action-row { display: none; width: 100%; max-width: 460px; gap: 10px; }
-    .btn-retake { flex: 1; height: 50px; background: #334155; color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
-    .btn-whatsapp { flex: 2; height: 50px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4); text-transform: uppercase; letter-spacing: 0.3px; }
+    .btn-retake { flex: 1; height: 50px; background: #334155; color: white; border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
+    .btn-whatsapp { flex: 2.2; height: 50px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.45); text-transform: uppercase; letter-spacing: 0.3px; }
     .btn-whatsapp:active { transform: scale(0.97); }
 
     #preview-container { width: 100%; max-width: 460px; display: none; }
@@ -111,7 +111,7 @@
 
   <!-- Bottom Actions -->
   <div class="action-bar">
-    <!-- Default Camera Controls -->
+    <!-- Camera Controls -->
     <div class="btn-row" id="cameraControls">
       <button class="btn-flip" id="flipBtn" onclick="toggleCamera()" title="Flip Camera">🔄</button>
       <button class="btn-capture" id="captureBtn" onclick="takeSnapshot()">📸 Photo</button>
@@ -131,7 +131,7 @@
   </div>
 
   <script>
-    // PWA Service Worker Registration
+    // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
@@ -175,25 +175,28 @@
     const recTimer = document.getElementById('rec-timer');
     const stopTimer = document.getElementById('stop-timer');
     
-    // State
+    // GPS & Address State
     let currentLat = "0.000000";
     let currentLon = "0.000000";
-    let currentAddress = "Fetching precise location...";
+    let currentHeadline = "Acquiring Location...";
+    let currentSubAddress = "Fetching area details...";
+    let currentPincode = "";
     let isGpsLocked = false;
     let addressFetched = false;
     let currentFacingMode = "environment"; 
     let currentStream = null;
 
-    // MediaRecorder State for Video Recording
+    // MediaRecorder State for Smooth Video
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordInterval = null;
     let recordSeconds = 0;
     let recordedVideoBlob = null;
+    let recordedVideoMime = "video/mp4";
     let lastCapturedPhotoBlob = null;
     let currentPreviewType = null; // 'photo' or 'video'
 
-    // Logo Image
+    // Logo Image (Kept at top)
     let logoImage = new Image();
     logoImage.crossOrigin = "anonymous";
     logoImage.src = "logo.png";
@@ -226,7 +229,7 @@
             window.serverSyncMark = Date.now();
             return;
           }
-        } catch(e) { /* try next endpoint */ }
+        } catch(e) { /* try next fallback */ }
       }
       if (!window.exactServerBaseTime) {
         window.exactServerBaseTime = new Date();
@@ -242,11 +245,11 @@
       return new Date(window.exactServerBaseTime.getTime() + elapsed);
     }
 
-    // Update Header Clock
+    // Header Clock
     setInterval(() => {
       const now = getExactCurrentTime();
       const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
-      liveClock.innerText = `${timeStr} (+05:30 IST)`;
+      liveClock.innerText = `${timeStr} GMT +05:30`;
     }, 1000);
 
     // Rounded Rectangle Helper for Canvas
@@ -256,29 +259,41 @@
       ctx.arcTo(x + width, y, x + width, y + height, radius);
       ctx.arcTo(x + width, y + height, x, y + height, radius);
       ctx.arcTo(x, y + height, x, y, radius);
-      ctx.arcTo(x, y, x + width, y, radius);
+      ctx.arcTo(x, y + width, y, radius);
       ctx.closePath();
     }
 
-    // Camera Management
+    // Smooth Camera Setup (720p 30fps for zero lag and optimal performance)
     async function startCamera() {
       if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+      
+      const constraints = {
+        video: {
+          facingMode: { ideal: currentFacingMode },
+          width: { ideal: 1280, max: 1280 },
+          height: { ideal: 720, max: 720 },
+          frameRate: { ideal: 30, max: 30 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true
+        }
+      };
+
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: currentFacingMode },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          },
-          audio: true // Enabled for video duty recording
-        });
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         currentStream = stream;
         video.srcObject = stream;
       } catch (err) {
-        // Fallback without audio if mic permission is blocked
+        // Fallback without audio if mic access blocked
         try {
           const streamNoAudio = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: currentFacingMode } },
+            video: {
+              facingMode: { ideal: currentFacingMode },
+              width: { ideal: 1280, max: 1280 },
+              height: { ideal: 720, max: 720 },
+              frameRate: { ideal: 30, max: 30 }
+            },
             audio: false
           });
           currentStream = streamNoAudio;
@@ -311,11 +326,11 @@
       currentPreviewType = null;
       recordedVideoBlob = null;
       lastCapturedPhotoBlob = null;
-      statusText.innerHTML = isGpsLocked ? `🟢 <b>Secured:</b> ${currentAddress}` : "⏳ <b>Finding Location...</b>";
+      statusText.innerHTML = isGpsLocked ? `🟢 <b>Secured:</b> ${currentHeadline}` : "⏳ <b>Finding Location...</b>";
       startCamera();
     }
 
-    // OpenStreetMap Tile Calculation for Mini Map Corner Stamp
+    // OpenStreetMap Satellite/Street Tile Calculation
     function updateMapTile(lat, lon) {
       const zoom = 16;
       const latRad = lat * Math.PI / 180;
@@ -349,31 +364,41 @@
               let data = await response.json();
               
               if(data && data.address) {
-                // Prioritize specific building, hospital, amenity, road
                 let specific = data.address.amenity || data.address.hospital || data.address.building || data.address.road || data.address.neighbourhood || "";
-                
-                // Then fetch the broader village, town, or city
                 let place = data.address.village || data.address.suburb || data.address.town || data.address.city || data.address.county || "";
                 let state = data.address.state || "";
+                let country = data.address.country || "India";
+                currentPincode = data.address.postcode || "";
+
+                // Headline: e.g. "Tosham Rural, Haryana, India" or "MK Hospital, Bamla, Haryana"
+                if (specific && place && specific !== place) {
+                  currentHeadline = `${specific}, ${place}`;
+                } else if (place && state) {
+                  currentHeadline = `${place}, ${state}, ${country}`;
+                } else {
+                  currentHeadline = place || state || "Patrol Location";
+                }
+
+                // Sub-address line: e.g. "Tosham Rural, Haryana 127040, India"
+                let subParts = [];
+                if (specific && specific !== currentHeadline) subParts.push(specific);
+                if (place) subParts.push(place);
+                if (state) subParts.push(state + (currentPincode ? ` ${currentPincode}` : ''));
+                subParts.push(country);
+                currentSubAddress = subParts.join(", ");
                 
-                let parts = [];
-                if (specific) parts.push(specific);
-                if (place && place !== specific) parts.push(place);
-                if (state) parts.push(state);
-                
-                currentAddress = parts.join(", ");
-                
-                if(!currentAddress && data.display_name) {
-                  currentAddress = data.display_name.split(",").slice(0, 3).join(", ");
+                if(!currentSubAddress && data.display_name) {
+                  currentSubAddress = data.display_name.split(",").slice(0, 3).join(", ");
                 }
               }
               addressFetched = true;
             } catch(e) {
-              currentAddress = "Unknown Location Node";
+              currentHeadline = "Patrol Location Node";
+              currentSubAddress = "Unknown Area";
             }
           }
           
-          statusText.innerHTML = `🟢 <b>Secured:</b> ${currentAddress}`;
+          statusText.innerHTML = `🟢 <b>Secured:</b> ${currentHeadline}`;
         },
         (err) => {
           if (err.code === 3) {
@@ -387,7 +412,7 @@
     }
 
     // ==========================================
-    // PHOTO CAPTURE WITH MODERN TINTED GLASS STAMP
+    // PHOTO CAPTURE: HIGH-CONTRAST COMPACT TEMPLATE
     // ==========================================
     function takeSnapshot() {
       if (!isGpsLocked) {
@@ -415,46 +440,63 @@
         // 1. Draw camera frame
         ctx.drawImage(video, 0, 0, cw, ch);
 
-        // 2. Logo at Top-Left (Per explicit requirement)
+        // 2. Logo at Top-Left (Crisp Watermark)
         try {
           if (logoImage.complete && logoImage.naturalWidth > 0) {
-            const logoWidth = cw * 0.19; 
+            const logoWidth = cw * 0.18; 
             const logoHeight = logoWidth * (logoImage.naturalHeight / logoImage.naturalWidth);
-            const logoX = cw * 0.04;
+            const logoX = cw * 0.035;
             const logoY = ch * 0.025;
             
-            // Subtle backing glow for logo so it pops on any background
             ctx.save();
-            ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-            ctx.shadowBlur = 12;
+            ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+            ctx.shadowBlur = 10;
             ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
             ctx.restore();
           }
         } catch (e) { console.log("Logo skip"); }
 
-        // 3. Bottom Tinted Glass Bar with Rounded Corners
-        const pad = cw * 0.035;
-        const cardHeight = Math.max(ch * 0.20, cw * 0.32);
-        const cardY = ch - cardHeight - pad;
-        const cardWidth = cw - (pad * 2);
-        const cardRadius = Math.min(20, cw * 0.035);
+        // 3. Compact Bottom Card Layout (Modeled after reference template)
+        const marginX = cw * 0.025;
+        const marginY = ch * 0.020;
+        
+        // Dynamic font sizes proportional to canvas width
+        const titleFont = Math.round(cw * 0.040);  // ~20-22px on mobile
+        const bodyFont = Math.round(cw * 0.028);   // ~15-16px
+        const subFont = Math.round(cw * 0.027);    // ~14-15px
+        const lineSpacing = Math.round(cw * 0.008);
 
-        // Tinted glass fill
-        ctx.fillStyle = "rgba(10, 15, 29, 0.88)";
-        drawRoundRect(ctx, pad, cardY, cardWidth, cardHeight, cardRadius);
+        // Calculate card height to tightly wrap 4 lines without dead gaps
+        const textBlockHeight = titleFont + bodyFont + subFont + subFont + (lineSpacing * 3);
+        const cardPaddingY = Math.round(cw * 0.022);
+        const cardHeight = textBlockHeight + (cardPaddingY * 2);
+        const cardWidth = cw - (marginX * 2);
+        const cardY = ch - cardHeight - marginY;
+        const cardRadius = 10;
+
+        // Tinted Dark Slate Container (#2b3342 with 94% opacity)
+        ctx.save();
+        ctx.fillStyle = "rgba(38, 47, 62, 0.94)";
+        drawRoundRect(ctx, marginX, cardY, cardWidth, cardHeight, cardRadius);
         ctx.fill();
 
-        // Subtle modern glass border
-        ctx.lineWidth = Math.max(1.5, cw * 0.002);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+        // Subtle clean outer border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+        ctx.lineWidth = 1.2;
         ctx.stroke();
 
-        // 4. Mini-Map Square on the Left Corner
-        const mapMargin = cardHeight * 0.10;
-        const mapSize = cardHeight - (mapMargin * 2);
-        const mapX = pad + mapMargin;
-        const mapY = cardY + mapMargin;
-        const mapRadius = Math.min(10, mapSize * 0.15);
+        // Left Vertical Brand Accent Line (Platoon Gold #f59e0b)
+        const stripeWidth = Math.max(4, Math.round(cw * 0.010));
+        ctx.fillStyle = "#f59e0b"; // Gold branding
+        drawRoundRect(ctx, marginX, cardY, stripeWidth, cardHeight, cardRadius);
+        ctx.fill();
+        ctx.restore();
+
+        // 4. Square Mini-Map in Left Corner
+        const mapSize = cardHeight - (cardPaddingY * 1.5);
+        const mapX = marginX + stripeWidth + Math.round(cw * 0.018);
+        const mapY = cardY + (cardHeight - mapSize) / 2;
+        const mapRadius = 8;
 
         ctx.save();
         drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
@@ -464,9 +506,9 @@
           ctx.drawImage(mapTileImage, mapX, mapY, mapSize, mapSize);
         } else {
           // Tactical dark grid fallback if offline
-          ctx.fillStyle = "#0f172a";
+          ctx.fillStyle = "#111827";
           ctx.fillRect(mapX, mapY, mapSize, mapSize);
-          ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
+          ctx.strokeStyle = "rgba(59, 130, 246, 0.35)";
           ctx.lineWidth = 1;
           for (let gx = mapX; gx <= mapX + mapSize; gx += mapSize / 4) {
             ctx.beginPath(); ctx.moveTo(gx, mapY); ctx.lineTo(gx, mapY + mapSize); ctx.stroke();
@@ -476,91 +518,74 @@
           }
         }
 
-        // Center Target Crosshair & Pin on Mini-Map
+        // Center Location Pin on Mini-Map
         const pinCenterX = mapX + (mapSize / 2);
         const pinCenterY = mapY + (mapSize / 2);
-
-        // Map crosshair circle
-        ctx.beginPath();
-        ctx.arc(pinCenterX, pinCenterY, mapSize * 0.18, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(239, 68, 68, 0.7)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Pin emoji
-        ctx.font = `${mapSize * 0.38}px Arial, sans-serif`;
+        ctx.font = `${Math.round(mapSize * 0.40)}px Arial, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("📍", pinCenterX, pinCenterY - (mapSize * 0.05));
+        ctx.fillText("📍", pinCenterX, pinCenterY - 2);
         ctx.restore();
 
         // Mini-Map Border
         ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.2;
         drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
         ctx.stroke();
 
-        // 5. Text Data Stack (Right of the Mini-Map)
-        const textX = mapX + mapSize + (cardWidth * 0.035);
-        const contentWidth = (pad + cardWidth) - textX - (cardWidth * 0.02);
-        let textY = cardY + (cardHeight * 0.22);
-        const baseFont = Math.max(14, cw * 0.026);
-        const lineHeight = cardHeight * 0.21;
+        // 5. High-Contrast Text Stack (Fills space tightly without dead gaps)
+        const textX = mapX + mapSize + Math.round(cw * 0.024);
+        const maxTextWidth = (marginX + cardWidth) - textX - Math.round(cw * 0.020);
+        let curY = cardY + cardPaddingY;
 
         ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
+        ctx.textBaseline = "top";
 
-        // Line 1: Organization Name + Verified Badge
-        ctx.font = `bold ${Math.max(16, cw * 0.032)}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText("Platoon Digital Patrol", textX, textY);
-
-        // Green verified badge pill
-        const orgTextWidth = ctx.measureText("Platoon Digital Patrol").width;
-        const badgeX = textX + orgTextWidth + 10;
-        if (badgeX + 80 < pad + cardWidth) {
-          ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
-          drawRoundRect(ctx, badgeX, textY - 9, 74, 18, 4);
-          ctx.fill();
-          ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
-          ctx.stroke();
-          ctx.fillStyle = "#34d399";
-          ctx.font = `bold ${Math.max(10, cw * 0.019)}px system-ui, sans-serif`;
-          ctx.fillText("● VERIFIED", badgeX + 6, textY);
-        }
-
-        // Line 2: Exact Detailed Location
-        textY += lineHeight;
-        ctx.font = `bold ${baseFont}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#fde047"; // High-visibility bright amber/gold
-        
-        let displayAddr = currentAddress;
-        // Truncate cleanly with ellipsis if unusually long
-        if (ctx.measureText(displayAddr).width > contentWidth) {
-          while (ctx.measureText(displayAddr + "...").width > contentWidth && displayAddr.length > 10) {
-            displayAddr = displayAddr.substring(0, displayAddr.length - 1);
+        // Helper to cleanly truncate with ellipsis
+        function fitText(text, maxW) {
+          if (ctx.measureText(text).width <= maxW) return text;
+          let truncated = text;
+          while (ctx.measureText(truncated + "...").width > maxW && truncated.length > 5) {
+            truncated = truncated.slice(0, -1);
           }
-          displayAddr += "...";
+          return truncated + "...";
         }
-        ctx.fillText(displayAddr, textX, textY);
 
-        // Line 3: Strict Internet Time (+05:30 IST)
-        textY += lineHeight;
+        // Line 1: Main Headline Location (Large, Bold, White)
+        ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(fitText(currentHeadline, maxTextWidth), textX, curY);
+        curY += titleFont + lineSpacing;
+
+        // Line 2: Indian Flag + Sub-address details
+        ctx.font = `normal ${bodyFont}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#f1f5f9";
+        const addrText = `🇮🇳 ${currentSubAddress}`;
+        ctx.fillText(fitText(addrText, maxTextWidth), textX, curY);
+        curY += bodyFont + lineSpacing;
+
+        // Line 3: Lat & Long Coordinates
+        ctx.font = `500 ${subFont}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#cbd5e1";
+        const gpsText = `Lat ${currentLat}°  Long ${currentLon}°`;
+        ctx.fillText(fitText(gpsText, maxTextWidth), textX, curY);
+        curY += subFont + lineSpacing;
+
+        // Line 4: Strict Internet Time & Date (GMT +05:30)
         const now = getExactCurrentTime();
-        const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
-        const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
-        
-        ctx.font = `600 ${Math.max(12, cw * 0.023)}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#f8fafc";
-        ctx.fillText(`🕒 ${dateStr}, ${timeStr} (+05:30 IST)`, textX, textY);
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayName = days[now.getDay()];
+        const dayNum = String(now.getDate()).padStart(2, '0');
+        const monthNum = String(now.getMonth() + 1).padStart(2, '0');
+        const yearNum = now.getFullYear();
+        const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
 
-        // Line 4: GPS Coordinates
-        textY += lineHeight;
-        ctx.font = `500 ${Math.max(11, cw * 0.021)}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#94a3b8";
-        ctx.fillText(`🌐 GPS: ${currentLat}° N, ${currentLon}° E`, textX, textY);
+        ctx.font = `600 ${subFont}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        const dateLine = `${dayName}, ${dayNum}/${monthNum}/${yearNum} ${timeFormatted} GMT +05:30`;
+        ctx.fillText(fitText(dateLine, maxTextWidth), textX, curY);
 
-        // Store blob for WhatsApp sharing
+        // Convert canvas to Blob for instant sharing
         canvas.toBlob((blob) => {
           lastCapturedPhotoBlob = blob;
         }, 'image/jpeg', 0.95);
@@ -573,8 +598,26 @@
     }
 
     // ==========================================
-    // VIDEO DUTY RECORDING
+    // LAG-FREE VIDEO RECORDING (HARDWARE ENCODED)
     // ==========================================
+    function getOptimalMimeType() {
+      // Prioritize hardware H.264 / MP4 for silky smooth 30fps with 0 lag
+      const types = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs=avc1',
+        'video/mp4',
+        'video/webm;codecs=h264,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+      ];
+      for (const t of types) {
+        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) {
+          return t;
+        }
+      }
+      return '';
+    }
+
     function startVideoRecording() {
       if (!isGpsLocked) {
         alert("कृपया GPS लोकेशन आने का इंतज़ार करें।\nPlease wait for GPS location before recording video.");
@@ -586,16 +629,16 @@
       }
 
       recordedChunks = [];
-      const options = { mimeType: 'video/webm;codecs=vp8,opus' };
-      
+      const mime = getOptimalMimeType();
+      recordedVideoMime = mime || 'video/mp4';
+
+      const recorderOptions = {
+        videoBitsPerSecond: 2500000 // 2.5 Mbps crisp 720p with 0 frame drops
+      };
+      if (mime) recorderOptions.mimeType = mime;
+
       try {
-        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-          mediaRecorder = new MediaRecorder(currentStream, { mimeType: 'video/webm;codecs=vp8,opus' });
-        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-          mediaRecorder = new MediaRecorder(currentStream, { mimeType: 'video/mp4' });
-        } else {
-          mediaRecorder = new MediaRecorder(currentStream);
-        }
+        mediaRecorder = new MediaRecorder(currentStream, recorderOptions);
       } catch (e) {
         mediaRecorder = new MediaRecorder(currentStream);
       }
@@ -607,15 +650,16 @@
       };
 
       mediaRecorder.onstop = () => {
-        const mimeType = mediaRecorder.mimeType || 'video/webm';
-        recordedVideoBlob = new Blob(recordedChunks, { type: mimeType });
+        const finalType = recordedVideoMime.includes('mp4') ? 'video/mp4' : 'video/webm';
+        recordedVideoBlob = new Blob(recordedChunks, { type: finalType });
         showVideoPreview(recordedVideoBlob);
       };
 
-      mediaRecorder.start(1000); // 1s slice
+      // Start without forced 1s slicing for perfectly smooth continuous recording
+      mediaRecorder.start();
       recordSeconds = 0;
 
-      // UI Switch to Recording Mode
+      // UI Switch
       document.getElementById('cameraControls').style.display = 'none';
       document.getElementById('recordingControls').style.display = 'flex';
       recIndicator.style.display = 'flex';
@@ -626,17 +670,16 @@
         recordSeconds++;
         const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
         const secs = String(recordSeconds % 60).padStart(2, '0');
-        const timeFormatted = `${mins}:${secs}`;
-        recTimer.innerText = `REC ${timeFormatted}`;
-        stopTimer.innerText = timeFormatted;
+        const formatted = `${mins}:${secs}`;
+        recTimer.innerText = `REC ${formatted}`;
+        stopTimer.innerText = formatted;
 
-        // Auto stop at 60 seconds max
         if (recordSeconds >= 60) {
           stopVideoRecording();
         }
       }, 1000);
 
-      statusText.innerHTML = "🔴 <b>Recording Patrol Video...</b> Tap Stop when finished.";
+      statusText.innerHTML = "🔴 <b>Recording Patrol Video...</b> Tap Stop when done.";
     }
 
     function stopVideoRecording() {
@@ -666,64 +709,62 @@
     }
 
     // ==========================================
-    // WHATSAPP SHARING (ONLY OPTION)
+    // ROBUST WHATSAPP SHARING
     // ==========================================
     async function shareToWhatsApp() {
       const now = getExactCurrentTime();
-      const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
       const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
 
-      const dutyText = `*🛡️ Platoon Digital Patrol Report*%0A` +
-        `📍 *Location:* ${encodeURIComponent(currentAddress)}%0A` +
-        `🕒 *Time:* ${dateStr}, ${timeStr} (+05:30 IST)%0A` +
+      // Clean, well-structured patrol report
+      const dutyReport = `*🛡️ Platoon Digital Patrol Report*%0A` +
+        `📍 *Location:* ${encodeURIComponent(currentHeadline)}%0A` +
+        `🏠 *Area:* ${encodeURIComponent(currentSubAddress)}%0A` +
         `🌐 *GPS:* ${currentLat}° N, ${currentLon}° E%0A` +
+        `🕒 *Time:* ${timeStr} GMT +05:30%0A` +
         `✅ *Status:* Official Verified Check-In`;
 
-      if (currentPreviewType === 'photo' && (lastCapturedPhotoBlob || canvas)) {
-        const blob = lastCapturedPhotoBlob || await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-        const file = new File([blob], `Platoon_Patrol_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      try {
+        if (currentPreviewType === 'photo') {
+          // Prepare JPEG file
+          const blob = lastCapturedPhotoBlob || await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+          const file = new File([blob], `Platoon_Patrol_${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
+          // CRITICAL: On Android WhatsApp, pass ONLY files: [file] without conflicting text
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
-              files: [file],
-              title: 'Platoon Digital Patrol Check-In',
-              text: `Platoon Digital Patrol | ${currentAddress} | ${timeStr} (+05:30 IST)`
+              files: [file]
             });
-            resetCamera();
+            statusText.innerHTML = "✅ Shared to WhatsApp successfully.";
             return;
-          } catch (e) {
-            // Cancelled or fallback
           }
-        }
-        
-        // Fallback for browsers without direct file WebShare
-        downloadBlob(blob, file.name);
-        window.open(`https://api.whatsapp.com/send?text=${dutyText}`, '_blank');
-        statusText.innerHTML = "✅ Photo saved! Opening WhatsApp...";
 
-      } else if (currentPreviewType === 'video' && recordedVideoBlob) {
-        const ext = recordedVideoBlob.type.includes('mp4') ? 'mp4' : 'webm';
-        const file = new File([recordedVideoBlob], `Platoon_Patrol_${Date.now()}.${ext}`, { type: recordedVideoBlob.type });
+          // Fallback if device browser does not support file WebShare:
+          downloadBlob(blob, file.name);
+          window.location.href = `whatsapp://send?text=${dutyReport}`;
+          statusText.innerHTML = "✅ Photo saved! Opening WhatsApp...";
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
+        } else if (currentPreviewType === 'video' && recordedVideoBlob) {
+          // Prepare MP4 video file
+          const file = new File([recordedVideoBlob], `Platoon_Patrol_${Date.now()}.mp4`, { type: 'video/mp4' });
+
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
-              files: [file],
-              title: 'Platoon Digital Patrol Video Report',
-              text: `Platoon Digital Patrol Video | ${currentAddress} | ${timeStr} (+05:30 IST)`
+              files: [file]
             });
-            resetCamera();
+            statusText.innerHTML = "✅ Video shared to WhatsApp successfully.";
             return;
-          } catch (e) {
-            // Cancelled or fallback
           }
-        }
 
-        // Fallback
-        downloadBlob(recordedVideoBlob, file.name);
-        window.open(`https://api.whatsapp.com/send?text=${dutyText}`, '_blank');
-        statusText.innerHTML = "✅ Video saved! Opening WhatsApp...";
+          // Fallback
+          downloadBlob(recordedVideoBlob, file.name);
+          window.location.href = `whatsapp://send?text=${dutyReport}`;
+          statusText.innerHTML = "✅ Video saved! Opening WhatsApp...";
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          // If native share threw an error other than user cancel, open WhatsApp directly
+          window.open(`https://api.whatsapp.com/send?text=${dutyReport}`, '_blank');
+        }
       }
     }
 
@@ -736,7 +777,7 @@
       document.body.removeChild(link);
     }
 
-    // Launch Camera on Page Load
+    // Start camera feed on load
     startCamera();
   </script>
 </body>
