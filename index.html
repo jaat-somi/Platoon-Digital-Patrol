@@ -447,6 +447,48 @@
       }
     }
 
+    // Offline Open Location Code (Plus Code) Generator
+    function getPlusCode(lat, lon) {
+      try {
+        const CODE_ALPHABET = "23456789CFGHJMPQRVWX";
+        let cLat = Math.min(Math.max(lat, -90), 90);
+        let cLon = ((((lon + 180) % 360) + 360) % 360) - 180;
+        if (cLat === 90) cLat -= 0.0000001;
+
+        let latVal = cLat + 90;
+        let lonVal = cLon + 180;
+        let code = "";
+        let latRes = 20.0;
+        let lonRes = 20.0;
+
+        for (let i = 0; i < 4; i++) {
+          const latDigit = Math.floor(latVal / latRes);
+          const lonDigit = Math.floor(lonVal / lonRes);
+          latVal -= latDigit * latRes;
+          lonVal -= lonDigit * lonRes;
+          code += CODE_ALPHABET[latDigit] + CODE_ALPHABET[lonDigit];
+          latRes /= 20.0;
+          lonRes /= 20.0;
+        }
+        code += "+";
+        for (let i = 0; i < 1; i++) {
+          const latDigit = Math.floor(latVal / latRes);
+          const lonDigit = Math.floor(lonVal / lonRes);
+          latVal -= latDigit * latRes;
+          lonVal -= lonDigit * lonRes;
+          code += CODE_ALPHABET[latDigit] + CODE_ALPHABET[lonDigit];
+          latRes /= 20.0;
+          lonRes /= 20.0;
+        }
+        return code.length >= 8 ? code.substring(4) : code;
+      } catch (e) {
+        return "";
+      }
+    }
+
+    let lastFetchedLat = null;
+    let lastFetchedLon = null;
+
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
         async (pos) => {
@@ -456,42 +498,93 @@
 
           updateMapTile(pos.coords.latitude, pos.coords.longitude);
 
-          if (!addressFetched) {
-            statusText.innerHTML = `📡 <b>GPS Locked:</b> Fetching precise landmark...`;
+          const distanceMoved = (lastFetchedLat !== null && lastFetchedLon !== null) 
+            ? Math.hypot(pos.coords.latitude - lastFetchedLat, pos.coords.longitude - lastFetchedLon)
+            : 1;
+
+          if (!addressFetched || distanceMoved > 0.0004) {
+            lastFetchedLat = pos.coords.latitude;
+            lastFetchedLon = pos.coords.longitude;
+            statusText.innerHTML = `📡 <b>GPS Locked:</b> Resolving precise landmark...`;
             try {
-              let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=18&addressdetails=1`);
+              let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=18&addressdetails=1&extratags=1&namedetails=1`);
               let data = await response.json();
               
-              if(data && data.address) {
-                let specific = data.address.amenity || data.address.hospital || data.address.building || data.address.road || data.address.neighbourhood || "";
-                let place = data.address.village || data.address.suburb || data.address.town || data.address.city || data.address.county || "";
-                let state = data.address.state || "";
-                let country = data.address.country || "India";
-                let pincode = data.address.postcode || "";
+              if (data && data.address) {
+                const a = data.address;
+                
+                // Building, amenity, landmark, medical, education, commerce, or government tags
+                const building = data.name || a.amenity || a.hospital || a.clinic || a.healthcare || 
+                                 a.building || a.school || a.college || a.university || a.police || 
+                                 a.shop || a.office || a.place_of_worship || a.temple || a.mosque || 
+                                 a.bank || a.commercial || a.government || a.emergency || a.residential || "";
 
-                if (specific && place && specific !== place) {
-                  currentHeadline = `${specific}, ${place}`;
-                } else if (place && state) {
+                // Road, street, highway, or pedestrian lane
+                const road = a.road || a.street || a.highway || a.pedestrian || a.footway || a.path || "";
+
+                // Locality, suburb, neighborhood, or sector
+                const locality = a.neighbourhood || a.suburb || a.subdistrict || a.quarter || a.hamlet || a.village_block || "";
+
+                // Village, town, or city
+                const place = a.village || a.town || a.city || a.municipality || a.city_district || "";
+
+                // Tehsil or District
+                const tehsil = a.county || "";
+                const district = a.state_district || (tehsil && tehsil !== place ? tehsil : "");
+
+                // State, Postal Code, Country
+                const state = a.state || "Haryana";
+                const pincode = a.postcode || "";
+                const country = a.country || "India";
+
+                // Plus Code (Open Location Code)
+                const plusCode = getPlusCode(pos.coords.latitude, pos.coords.longitude);
+
+                // Construct Headline: Prioritize Building > Road > Locality > Place
+                if (building && place && building.toLowerCase() !== place.toLowerCase()) {
+                  currentHeadline = `${building}, ${place}`;
+                } else if (building) {
+                  currentHeadline = `${building}, ${district || state}`;
+                } else if (road && place) {
+                  currentHeadline = `${road}, ${place}`;
+                } else if (locality && place) {
+                  currentHeadline = `${locality}, ${place}`;
+                } else if (place && district && place.toLowerCase() !== district.toLowerCase()) {
+                  currentHeadline = `${place}, ${district}, ${state}`;
+                } else if (place) {
                   currentHeadline = `${place}, ${state}, ${country}`;
                 } else {
-                  currentHeadline = place || state || "Patrol Location";
+                  currentHeadline = `${state}, ${country}`;
                 }
 
-                let subParts = [];
-                if (specific && specific !== currentHeadline) subParts.push(specific);
-                if (place) subParts.push(place);
-                if (state) subParts.push(state + (pincode ? ` ${pincode}` : ''));
-                subParts.push(country);
-                currentSubAddress = subParts.join(", ");
-                
-                if(!currentSubAddress && data.display_name) {
-                  currentSubAddress = data.display_name.split(",").slice(0, 3).join(", ");
+                // Construct Rich Hierarchical Sub-Address
+                let parts = [];
+                if (plusCode) parts.push(plusCode);
+                if (building && !currentHeadline.startsWith(building)) parts.push(building);
+                if (road) parts.push(road);
+                if (locality && locality !== place && locality !== building) parts.push(locality);
+                if (place) parts.push(place);
+                if (district && district !== place && district !== tehsil) parts.push(district);
+                if (state) parts.push(state + (pincode ? ` ${pincode}` : ''));
+                parts.push(country);
+
+                // Deduplicate parts
+                let cleanParts = [];
+                for (let p of parts) {
+                  if (p && !cleanParts.some(cp => cp.trim().toLowerCase() === p.trim().toLowerCase())) {
+                    cleanParts.push(p.trim());
+                  }
+                }
+                currentSubAddress = cleanParts.join(", ");
+
+                if (!currentSubAddress && data.display_name) {
+                  currentSubAddress = data.display_name.split(",").slice(0, 4).join(", ");
                 }
               }
               addressFetched = true;
             } catch(e) {
-              currentHeadline = "Patrol Location Node";
-              currentSubAddress = "Unknown Area";
+              if (!currentHeadline) currentHeadline = "Patrol Security Node";
+              if (!currentSubAddress) currentSubAddress = "Field Location";
             }
           }
           
@@ -509,16 +602,16 @@
     }
 
     // =========================================================
-    // UNIFIED WATERMARK RENDERER (TOP LOGO + BOTTOM CARD)
+    // UNIFIED WATERMARK RENDERER (TOP LOGO + DUAL BOTTOM CARDS)
     // =========================================================
     function drawWatermarkTemplate(ctx, cw, ch) {
-      // 1. Logo at Top-Left
+      // 1. Transparent Company Logo at Top-Left (Subtle drop shadow)
       try {
         if (logoImage.complete && logoImage.naturalWidth > 0) {
-          const logoWidth = cw * 0.18; 
-          const logoHeight = logoWidth * (logoImage.naturalHeight / logoImage.naturalWidth);
-          const logoX = cw * 0.035;
-          const logoY = ch * 0.025;
+          const logoWidth = Math.round(cw * 0.18); 
+          const logoHeight = Math.round(logoWidth * (logoImage.naturalHeight / logoImage.naturalWidth));
+          const logoX = Math.round(cw * 0.035);
+          const logoY = Math.round(ch * 0.025);
           
           ctx.save();
           ctx.shadowColor = "rgba(0, 0, 0, 0.75)";
@@ -528,48 +621,35 @@
         }
       } catch (e) { /* skip */ }
 
-      // 2. Compact Bottom Card Layout
-      const marginX = Math.round(cw * 0.025);
-      const marginY = Math.round(ch * 0.020);
-      
-      const titleFont = Math.max(14, Math.round(cw * 0.038));  // ~20-22px
-      const bodyFont = Math.max(11, Math.round(cw * 0.027));   // ~15-16px
-      const subFont = Math.max(10, Math.round(cw * 0.025));    // ~14px
-      const lineSpacing = Math.max(4, Math.round(cw * 0.007));
+      // 2. Geometry: Map Card (Left) & Separated Location Box (Right)
+      const marginX = Math.round(cw * 0.030);
+      const marginY = Math.round(ch * 0.024);
+      const gap = Math.round(cw * 0.022); // VISIBLE SEPARATION GAP
 
-      const textBlockHeight = titleFont + bodyFont + subFont + subFont + (lineSpacing * 3);
-      const cardPaddingY = Math.max(10, Math.round(cw * 0.020));
-      const cardHeight = textBlockHeight + (cardPaddingY * 2);
-      const cardWidth = cw - (marginX * 2);
+      const cardHeight = Math.round(ch * 0.170); // ~163px on 960h, ~245px on 1440h
       const cardY = ch - cardHeight - marginY;
-      const cardRadius = 12;
+      const cornerRadius = Math.round(cardHeight * 0.09);
 
-      // Dark Slate Container
+      // =========================================================
+      // CARD A: Square Mini-Map Tile (Left)
+      // =========================================================
+      const mapSize = cardHeight; // Perfect 1:1 square
+      const mapX = marginX;
+      const mapY = cardY;
+
+      // Card A Shadow & Background
       ctx.save();
-      drawRoundRect(ctx, marginX, cardY, cardWidth, cardHeight, cardRadius);
-      ctx.fillStyle = "rgba(34, 43, 58, 0.94)";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 4;
+      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, cornerRadius);
+      ctx.fillStyle = "#111827";
       ctx.fill();
-
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      ctx.clip();
-
-      // Left Vertical Brand Accent Stripe (Platoon Gold #f59e0b)
-      const stripeWidth = Math.max(6, Math.round(cw * 0.014));
-      ctx.fillStyle = "#f59e0b";
-      ctx.fillRect(marginX, cardY, stripeWidth, cardHeight);
       ctx.restore();
 
-      // 3. Square Mini-Map in Left Corner
-      const mapSize = cardHeight - (cardPaddingY * 1.5);
-      const mapX = marginX + stripeWidth + Math.round(cw * 0.020);
-      const mapY = cardY + (cardHeight - mapSize) / 2;
-      const mapRadius = 8;
-
+      // Clip map tile to rounded corners
       ctx.save();
-      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
+      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, cornerRadius);
       ctx.clip();
 
       if (mapTileLoaded && mapTileImage.complete && mapTileImage.naturalWidth > 0) {
@@ -582,58 +662,131 @@
         drawFallbackGrid(ctx, mapX, mapY, mapSize);
       }
 
+      // Center Location Pin on Mini-Map
       const pinCenterX = mapX + (mapSize / 2);
       const pinCenterY = mapY + (mapSize / 2);
-      ctx.font = `${Math.round(mapSize * 0.42)}px Arial, sans-serif`;
+      ctx.font = `${Math.round(mapSize * 0.38)}px Arial, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      ctx.shadowBlur = 6;
       ctx.fillText("📍", pinCenterX, pinCenterY - 2);
       ctx.restore();
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+      // Left Vertical Brand Accent Stripe on Map Card (Platoon Gold #f59e0b)
+      const stripeWidth = Math.max(5, Math.round(cw * 0.012));
+      ctx.save();
+      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, cornerRadius);
+      ctx.clip();
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(mapX, mapY, stripeWidth, mapSize);
+      ctx.restore();
+
+      // Map Card Border
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
       ctx.lineWidth = 1.2;
-      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
+      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, cornerRadius);
       ctx.stroke();
+      ctx.restore();
 
-      // 4. Text Stack
-      const textX = mapX + mapSize + Math.round(cw * 0.024);
-      const maxTextWidth = Math.max(50, (marginX + cardWidth) - textX - Math.round(cw * 0.020));
-      let curY = cardY + cardPaddingY;
+      // =========================================================
+      // CARD B: Separated Location & Metadata Card (Right)
+      // =========================================================
+      const textCardX = mapX + mapSize + gap;
+      const textCardWidth = (cw - marginX) - textCardX;
+      const textCardY = cardY;
+      const textCardHeight = cardHeight;
 
+      // Card B Shadow & Background (Tinted Slate Glass)
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 4;
+      drawRoundRect(ctx, textCardX, textCardY, textCardWidth, textCardHeight, cornerRadius);
+      ctx.fillStyle = "rgba(26, 34, 48, 0.94)";
+      ctx.fill();
+      ctx.restore();
+
+      // Card B Border
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+      ctx.lineWidth = 1.2;
+      drawRoundRect(ctx, textCardX, textCardY, textCardWidth, textCardHeight, cornerRadius);
+      ctx.stroke();
+      ctx.restore();
+
+      // Inner Padding & Text Space
+      const padX = Math.round(textCardWidth * 0.042);
+      const padY = Math.round(textCardHeight * 0.08);
+      const innerW = textCardWidth - (padX * 2);
+      const innerH = textCardHeight - (padY * 2);
+      const startX = textCardX + padX;
+
+      // Dynamic Font Scaling
+      let brandFont = Math.max(10, Math.round(innerH * 0.095));
+      let titleFont = Math.max(14, Math.round(innerH * 0.145));
+      let bodyFont  = Math.max(11, Math.round(innerH * 0.115));
+      let coordFont = Math.max(10, Math.round(innerH * 0.105));
+      let timeFont  = Math.max(10, Math.round(innerH * 0.105));
+
+      function fitText(text, maxW, fontSpec) {
+        if (!text) return "";
+        ctx.font = fontSpec;
+        if (ctx.measureText(text).width <= maxW) return text;
+        let str = String(text);
+        while (ctx.measureText(str + "...").width > maxW && str.length > 3) {
+          str = str.slice(0, -1);
+        }
+        return str + "...";
+      }
+
+      // Dynamically shrink title font if headline is long
+      ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
+      while (ctx.measureText(currentHeadline).width > innerW && titleFont > 12) {
+        titleFont -= 1;
+        ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
+      }
+
+      // Vertical Rhythm: distribute vertical space evenly across 5 lines
+      const totalFontH = brandFont + titleFont + bodyFont + coordFont + timeFont;
+      const vGap = Math.max(3, Math.floor((innerH - totalFontH) / 4));
+
+      let curY = textCardY + padY;
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
 
-      function fitText(text, maxW) {
-        if (!text) return "";
-        if (ctx.measureText(text).width <= maxW) return text;
-        let truncated = String(text);
-        while (ctx.measureText(truncated + "...").width > maxW && truncated.length > 3) {
-          truncated = truncated.slice(0, -1);
-        }
-        return truncated + "...";
-      }
+      // Line 1: Brand & Status Header
+      ctx.font = `bold ${brandFont}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillText("🛡️ PLATOON DIGITAL PATROL", startX, curY);
 
-      // Line 1: Headline Location
+      ctx.font = `600 ${Math.max(9, brandFont - 1)}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#34d399";
+      ctx.textAlign = "right";
+      ctx.fillText("● VERIFIED GPS", textCardX + textCardWidth - padX, curY);
+      ctx.textAlign = "left";
+      curY += brandFont + vGap;
+
+      // Line 2: Main Headline Location (Building / Street / Town)
       ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(fitText(currentHeadline, maxTextWidth), textX, curY);
-      curY += titleFont + lineSpacing;
+      ctx.fillText(fitText(currentHeadline, innerW, ctx.font), startX, curY);
+      curY += titleFont + vGap;
 
-      // Line 2: Indian Flag + Sub-address
+      // Line 3: 🇮🇳 Detailed Full Address with Plus Code, Street, Locality & Pincode
       ctx.font = `normal ${bodyFont}px system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = "#f1f5f9";
-      const addrText = `🇮🇳 ${currentSubAddress}`;
-      ctx.fillText(fitText(addrText, maxTextWidth), textX, curY);
-      curY += bodyFont + lineSpacing;
+      ctx.fillText(fitText(`🇮🇳 ${currentSubAddress}`, innerW, ctx.font), startX, curY);
+      curY += bodyFont + vGap;
 
-      // Line 3: Lat & Long Coordinates
-      ctx.font = `500 ${subFont}px system-ui, -apple-system, sans-serif`;
-      ctx.fillStyle = "#cbd5e1";
-      const gpsText = `Lat ${currentLat}°  Long ${currentLon}°`;
-      ctx.fillText(fitText(gpsText, maxTextWidth), textX, curY);
-      curY += subFont + lineSpacing;
+      // Line 4: Precise GPS Coordinates
+      ctx.font = `500 ${coordFont}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText(fitText(`Lat ${currentLat}°   Long ${currentLon}°`, innerW, ctx.font), startX, curY);
+      curY += coordFont + vGap;
 
-      // Line 4: Strict Internet Time & Date (GMT +05:30)
+      // Line 5: Strict Internet Timestamp (GMT +05:30)
       const now = getExactCurrentTime();
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const dayName = days[now.getDay()];
@@ -642,10 +795,10 @@
       const yearNum = now.getFullYear();
       const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
 
-      ctx.font = `600 ${subFont}px system-ui, -apple-system, sans-serif`;
+      ctx.font = `600 ${timeFont}px system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = "#ffffff";
       const dateLine = `${dayName}, ${dayNum}/${monthNum}/${yearNum} ${timeFormatted} GMT +05:30`;
-      ctx.fillText(fitText(dateLine, maxTextWidth), textX, curY);
+      ctx.fillText(fitText(dateLine, innerW, ctx.font), startX, curY);
     }
 
     function drawFallbackGrid(ctx, x, y, size) {
