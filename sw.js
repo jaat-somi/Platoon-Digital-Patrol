@@ -1,5 +1,5 @@
 // sw.js - Service Worker for Platoon Digital Patrol
-const CACHE_NAME = 'Platoon-Patrol-v4';
+const CACHE_NAME = 'Platoon-Patrol-v5';
 const ASSETS = [
   '/',
   '/index.html',

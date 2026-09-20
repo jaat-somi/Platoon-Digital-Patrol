@@ -80,7 +80,7 @@
     <div class="brand-title">
       🛡️ <span>Platoon</span> Digital Patrol
     </div>
-    <div id="live-clock">--:--:-- IST</div>
+    <div id="live-clock">--:--:-- GMT +05:30</div>
   </header>
 
   <main>
@@ -107,6 +107,9 @@
       <canvas id="canvas"></canvas>
       <video id="videoPreview" controls playsinline></video>
     </div>
+
+    <!-- Hidden Offscreen Canvas for Real-Time Watermarked Video Recording -->
+    <canvas id="recCanvas" style="display: none;"></canvas>
   </main>
 
   <!-- Bottom Actions -->
@@ -135,7 +138,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('ServiceWorker registered successfully.');
+          console.log('ServiceWorker registered.');
         }).catch(err => console.log('ServiceWorker registration failed: ', err));
       });
     }
@@ -168,6 +171,7 @@
     // DOM Elements
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
+    const recCanvas = document.getElementById('recCanvas');
     const videoPreview = document.getElementById('videoPreview');
     const statusText = document.getElementById('status');
     const liveClock = document.getElementById('live-clock');
@@ -180,17 +184,17 @@
     let currentLon = "0.000000";
     let currentHeadline = "Acquiring Location...";
     let currentSubAddress = "Fetching area details...";
-    let currentPincode = "";
     let isGpsLocked = false;
     let addressFetched = false;
     let currentFacingMode = "environment"; 
     let currentStream = null;
 
-    // MediaRecorder State for Smooth Video
+    // MediaRecorder State for Real-Time Watermarked Video
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordInterval = null;
     let recordSeconds = 0;
+    let isRecordingActive = false;
     let recordedVideoBlob = null;
     let recordedVideoMime = "video/mp4";
     let lastCapturedPhotoBlob = null;
@@ -252,32 +256,37 @@
       liveClock.innerText = `${timeStr} GMT +05:30`;
     }, 1000);
 
-    // Rounded Rectangle Helper for Canvas
+    // Bulletproof Rounded Rectangle Helper (Natively supported or fallback)
     function drawRoundRect(ctx, x, y, width, height, radius) {
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, radius);
+        return;
+      }
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + width, y, x + width, y + height, radius);
-      ctx.arcTo(x + width, y + height, x, y + height, radius);
-      ctx.arcTo(x, y + height, x, y, radius);
-      ctx.arcTo(x, y + width, y, radius);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
       ctx.closePath();
     }
 
-    // Smooth Camera Setup (720p 30fps for zero lag and optimal performance)
+    // Smooth Camera Setup
     async function startCamera() {
       if (currentStream) currentStream.getTracks().forEach(track => track.stop());
       
       const constraints = {
         video: {
           facingMode: { ideal: currentFacingMode },
-          width: { ideal: 1280, max: 1280 },
-          height: { ideal: 720, max: 720 },
-          frameRate: { ideal: 30, max: 30 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true
-        }
+        audio: true
       };
 
       try {
@@ -288,12 +297,7 @@
         // Fallback without audio if mic access blocked
         try {
           const streamNoAudio = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { ideal: currentFacingMode },
-              width: { ideal: 1280, max: 1280 },
-              height: { ideal: 720, max: 720 },
-              frameRate: { ideal: 30, max: 30 }
-            },
+            video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: false
           });
           currentStream = streamNoAudio;
@@ -326,6 +330,7 @@
       currentPreviewType = null;
       recordedVideoBlob = null;
       lastCapturedPhotoBlob = null;
+      isRecordingActive = false;
       statusText.innerHTML = isGpsLocked ? `🟢 <b>Secured:</b> ${currentHeadline}` : "⏳ <b>Finding Location...</b>";
       startCamera();
     }
@@ -354,7 +359,6 @@
           currentLat = pos.coords.latitude.toFixed(6);
           currentLon = pos.coords.longitude.toFixed(6);
 
-          // Update mini-map tile
           updateMapTile(pos.coords.latitude, pos.coords.longitude);
 
           if (!addressFetched) {
@@ -368,9 +372,9 @@
                 let place = data.address.village || data.address.suburb || data.address.town || data.address.city || data.address.county || "";
                 let state = data.address.state || "";
                 let country = data.address.country || "India";
-                currentPincode = data.address.postcode || "";
+                let pincode = data.address.postcode || "";
 
-                // Headline: e.g. "Tosham Rural, Haryana, India" or "MK Hospital, Bamla, Haryana"
+                // Headline: e.g. "Tosham Rural, Haryana, India" or "MK Hospital, Bamla"
                 if (specific && place && specific !== place) {
                   currentHeadline = `${specific}, ${place}`;
                 } else if (place && state) {
@@ -383,7 +387,7 @@
                 let subParts = [];
                 if (specific && specific !== currentHeadline) subParts.push(specific);
                 if (place) subParts.push(place);
-                if (state) subParts.push(state + (currentPincode ? ` ${currentPincode}` : ''));
+                if (state) subParts.push(state + (pincode ? ` ${pincode}` : ''));
                 subParts.push(country);
                 currentSubAddress = subParts.join(", ");
                 
@@ -411,8 +415,165 @@
       );
     }
 
+    // =========================================================
+    // UNIFIED WATERMARK RENDERER (USED FOR BOTH PHOTO & VIDEO)
+    // =========================================================
+    function drawWatermarkTemplate(ctx, cw, ch) {
+      // 1. Logo at Top-Left
+      try {
+        if (logoImage.complete && logoImage.naturalWidth > 0) {
+          const logoWidth = cw * 0.18; 
+          const logoHeight = logoWidth * (logoImage.naturalHeight / logoImage.naturalWidth);
+          const logoX = cw * 0.035;
+          const logoY = ch * 0.025;
+          
+          ctx.save();
+          ctx.shadowColor = "rgba(0, 0, 0, 0.75)";
+          ctx.shadowBlur = 10;
+          ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+          ctx.restore();
+        }
+      } catch (e) { /* skip */ }
+
+      // 2. Compact Bottom Card Layout
+      const marginX = Math.round(cw * 0.025);
+      const marginY = Math.round(ch * 0.020);
+      
+      const titleFont = Math.max(14, Math.round(cw * 0.038));  // ~20-22px on mobile
+      const bodyFont = Math.max(11, Math.round(cw * 0.027));   // ~15-16px
+      const subFont = Math.max(10, Math.round(cw * 0.025));    // ~14px
+      const lineSpacing = Math.max(4, Math.round(cw * 0.007));
+
+      const textBlockHeight = titleFont + bodyFont + subFont + subFont + (lineSpacing * 3);
+      const cardPaddingY = Math.max(10, Math.round(cw * 0.020));
+      const cardHeight = textBlockHeight + (cardPaddingY * 2);
+      const cardWidth = cw - (marginX * 2);
+      const cardY = ch - cardHeight - marginY;
+      const cardRadius = 12;
+
+      // Dark Slate Container
+      ctx.save();
+      drawRoundRect(ctx, marginX, cardY, cardWidth, cardHeight, cardRadius);
+      ctx.fillStyle = "rgba(34, 43, 58, 0.94)";
+      ctx.fill();
+
+      // Subtle Outer Border
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Clip inside card to cleanly round the gold stripe
+      ctx.clip();
+
+      // Left Vertical Brand Accent Stripe (Platoon Gold #f59e0b)
+      const stripeWidth = Math.max(6, Math.round(cw * 0.014));
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(marginX, cardY, stripeWidth, cardHeight);
+      ctx.restore();
+
+      // 3. Square Mini-Map in Left Corner
+      const mapSize = cardHeight - (cardPaddingY * 1.5);
+      const mapX = marginX + stripeWidth + Math.round(cw * 0.020);
+      const mapY = cardY + (cardHeight - mapSize) / 2;
+      const mapRadius = 8;
+
+      ctx.save();
+      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
+      ctx.clip();
+
+      if (mapTileLoaded && mapTileImage.complete && mapTileImage.naturalWidth > 0) {
+        try {
+          ctx.drawImage(mapTileImage, mapX, mapY, mapSize, mapSize);
+        } catch(e) {
+          drawFallbackGrid(ctx, mapX, mapY, mapSize);
+        }
+      } else {
+        drawFallbackGrid(ctx, mapX, mapY, mapSize);
+      }
+
+      // Center Location Pin on Mini-Map
+      const pinCenterX = mapX + (mapSize / 2);
+      const pinCenterY = mapY + (mapSize / 2);
+      ctx.font = `${Math.round(mapSize * 0.42)}px Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("📍", pinCenterX, pinCenterY - 2);
+      ctx.restore();
+
+      // Mini-Map Border
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+      ctx.lineWidth = 1.2;
+      drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
+      ctx.stroke();
+
+      // 4. Text Stack
+      const textX = mapX + mapSize + Math.round(cw * 0.024);
+      const maxTextWidth = Math.max(50, (marginX + cardWidth) - textX - Math.round(cw * 0.020));
+      let curY = cardY + cardPaddingY;
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+
+      function fitText(text, maxW) {
+        if (!text) return "";
+        if (ctx.measureText(text).width <= maxW) return text;
+        let truncated = String(text);
+        while (ctx.measureText(truncated + "...").width > maxW && truncated.length > 3) {
+          truncated = truncated.slice(0, -1);
+        }
+        return truncated + "...";
+      }
+
+      // Line 1: Main Headline Location (Large, Bold, White)
+      ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(fitText(currentHeadline, maxTextWidth), textX, curY);
+      curY += titleFont + lineSpacing;
+
+      // Line 2: Indian Flag + Sub-address
+      ctx.font = `normal ${bodyFont}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#f1f5f9";
+      const addrText = `🇮🇳 ${currentSubAddress}`;
+      ctx.fillText(fitText(addrText, maxTextWidth), textX, curY);
+      curY += bodyFont + lineSpacing;
+
+      // Line 3: Lat & Long Coordinates
+      ctx.font = `500 ${subFont}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#cbd5e1";
+      const gpsText = `Lat ${currentLat}°  Long ${currentLon}°`;
+      ctx.fillText(fitText(gpsText, maxTextWidth), textX, curY);
+      curY += subFont + lineSpacing;
+
+      // Line 4: Strict Internet Time & Date (GMT +05:30)
+      const now = getExactCurrentTime();
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayName = days[now.getDay()];
+      const dayNum = String(now.getDate()).padStart(2, '0');
+      const monthNum = String(now.getMonth() + 1).padStart(2, '0');
+      const yearNum = now.getFullYear();
+      const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+
+      ctx.font = `600 ${subFont}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = "#ffffff";
+      const dateLine = `${dayName}, ${dayNum}/${monthNum}/${yearNum} ${timeFormatted} GMT +05:30`;
+      ctx.fillText(fitText(dateLine, maxTextWidth), textX, curY);
+    }
+
+    function drawFallbackGrid(ctx, x, y, size) {
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(x, y, size, size);
+      ctx.strokeStyle = "rgba(59, 130, 246, 0.35)";
+      ctx.lineWidth = 1;
+      for (let gx = x; gx <= x + size; gx += size / 4) {
+        ctx.beginPath(); ctx.moveTo(gx, y); ctx.lineTo(gx, y + size); ctx.stroke();
+      }
+      for (let gy = y; gy <= y + size; gy += size / 4) {
+        ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + size, gy); ctx.stroke();
+      }
+    }
+
     // ==========================================
-    // PHOTO CAPTURE: HIGH-CONTRAST COMPACT TEMPLATE
+    // PHOTO CAPTURE
     // ==========================================
     function takeSnapshot() {
       if (!isGpsLocked) {
@@ -437,155 +598,13 @@
         const cw = canvas.width;
         const ch = canvas.height;
 
-        // 1. Draw camera frame
+        // 1. Draw raw camera frame
         ctx.drawImage(video, 0, 0, cw, ch);
 
-        // 2. Logo at Top-Left (Crisp Watermark)
-        try {
-          if (logoImage.complete && logoImage.naturalWidth > 0) {
-            const logoWidth = cw * 0.18; 
-            const logoHeight = logoWidth * (logoImage.naturalHeight / logoImage.naturalWidth);
-            const logoX = cw * 0.035;
-            const logoY = ch * 0.025;
-            
-            ctx.save();
-            ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
-            ctx.shadowBlur = 10;
-            ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
-            ctx.restore();
-          }
-        } catch (e) { console.log("Logo skip"); }
+        // 2. Draw unified watermark (Logo at top + bottom template)
+        drawWatermarkTemplate(ctx, cw, ch);
 
-        // 3. Compact Bottom Card Layout (Modeled after reference template)
-        const marginX = cw * 0.025;
-        const marginY = ch * 0.020;
-        
-        // Dynamic font sizes proportional to canvas width
-        const titleFont = Math.round(cw * 0.040);  // ~20-22px on mobile
-        const bodyFont = Math.round(cw * 0.028);   // ~15-16px
-        const subFont = Math.round(cw * 0.027);    // ~14-15px
-        const lineSpacing = Math.round(cw * 0.008);
-
-        // Calculate card height to tightly wrap 4 lines without dead gaps
-        const textBlockHeight = titleFont + bodyFont + subFont + subFont + (lineSpacing * 3);
-        const cardPaddingY = Math.round(cw * 0.022);
-        const cardHeight = textBlockHeight + (cardPaddingY * 2);
-        const cardWidth = cw - (marginX * 2);
-        const cardY = ch - cardHeight - marginY;
-        const cardRadius = 10;
-
-        // Tinted Dark Slate Container (#2b3342 with 94% opacity)
-        ctx.save();
-        ctx.fillStyle = "rgba(38, 47, 62, 0.94)";
-        drawRoundRect(ctx, marginX, cardY, cardWidth, cardHeight, cardRadius);
-        ctx.fill();
-
-        // Subtle clean outer border
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-
-        // Left Vertical Brand Accent Line (Platoon Gold #f59e0b)
-        const stripeWidth = Math.max(4, Math.round(cw * 0.010));
-        ctx.fillStyle = "#f59e0b"; // Gold branding
-        drawRoundRect(ctx, marginX, cardY, stripeWidth, cardHeight, cardRadius);
-        ctx.fill();
-        ctx.restore();
-
-        // 4. Square Mini-Map in Left Corner
-        const mapSize = cardHeight - (cardPaddingY * 1.5);
-        const mapX = marginX + stripeWidth + Math.round(cw * 0.018);
-        const mapY = cardY + (cardHeight - mapSize) / 2;
-        const mapRadius = 8;
-
-        ctx.save();
-        drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
-        ctx.clip();
-
-        if (mapTileLoaded && mapTileImage.complete && mapTileImage.naturalWidth > 0) {
-          ctx.drawImage(mapTileImage, mapX, mapY, mapSize, mapSize);
-        } else {
-          // Tactical dark grid fallback if offline
-          ctx.fillStyle = "#111827";
-          ctx.fillRect(mapX, mapY, mapSize, mapSize);
-          ctx.strokeStyle = "rgba(59, 130, 246, 0.35)";
-          ctx.lineWidth = 1;
-          for (let gx = mapX; gx <= mapX + mapSize; gx += mapSize / 4) {
-            ctx.beginPath(); ctx.moveTo(gx, mapY); ctx.lineTo(gx, mapY + mapSize); ctx.stroke();
-          }
-          for (let gy = mapY; gy <= mapY + mapSize; gy += mapSize / 4) {
-            ctx.beginPath(); ctx.moveTo(mapX, gy); ctx.lineTo(mapX + mapSize, gy); ctx.stroke();
-          }
-        }
-
-        // Center Location Pin on Mini-Map
-        const pinCenterX = mapX + (mapSize / 2);
-        const pinCenterY = mapY + (mapSize / 2);
-        ctx.font = `${Math.round(mapSize * 0.40)}px Arial, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("📍", pinCenterX, pinCenterY - 2);
-        ctx.restore();
-
-        // Mini-Map Border
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-        ctx.lineWidth = 1.2;
-        drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
-        ctx.stroke();
-
-        // 5. High-Contrast Text Stack (Fills space tightly without dead gaps)
-        const textX = mapX + mapSize + Math.round(cw * 0.024);
-        const maxTextWidth = (marginX + cardWidth) - textX - Math.round(cw * 0.020);
-        let curY = cardY + cardPaddingY;
-
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-
-        // Helper to cleanly truncate with ellipsis
-        function fitText(text, maxW) {
-          if (ctx.measureText(text).width <= maxW) return text;
-          let truncated = text;
-          while (ctx.measureText(truncated + "...").width > maxW && truncated.length > 5) {
-            truncated = truncated.slice(0, -1);
-          }
-          return truncated + "...";
-        }
-
-        // Line 1: Main Headline Location (Large, Bold, White)
-        ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(fitText(currentHeadline, maxTextWidth), textX, curY);
-        curY += titleFont + lineSpacing;
-
-        // Line 2: Indian Flag + Sub-address details
-        ctx.font = `normal ${bodyFont}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#f1f5f9";
-        const addrText = `🇮🇳 ${currentSubAddress}`;
-        ctx.fillText(fitText(addrText, maxTextWidth), textX, curY);
-        curY += bodyFont + lineSpacing;
-
-        // Line 3: Lat & Long Coordinates
-        ctx.font = `500 ${subFont}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#cbd5e1";
-        const gpsText = `Lat ${currentLat}°  Long ${currentLon}°`;
-        ctx.fillText(fitText(gpsText, maxTextWidth), textX, curY);
-        curY += subFont + lineSpacing;
-
-        // Line 4: Strict Internet Time & Date (GMT +05:30)
-        const now = getExactCurrentTime();
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const dayName = days[now.getDay()];
-        const dayNum = String(now.getDate()).padStart(2, '0');
-        const monthNum = String(now.getMonth() + 1).padStart(2, '0');
-        const yearNum = now.getFullYear();
-        const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
-
-        ctx.font = `600 ${subFont}px system-ui, -apple-system, sans-serif`;
-        ctx.fillStyle = "#ffffff";
-        const dateLine = `${dayName}, ${dayNum}/${monthNum}/${yearNum} ${timeFormatted} GMT +05:30`;
-        ctx.fillText(fitText(dateLine, maxTextWidth), textX, curY);
-
-        // Convert canvas to Blob for instant sharing
+        // 3. Convert to Blob for instant sharing
         canvas.toBlob((blob) => {
           lastCapturedPhotoBlob = blob;
         }, 'image/jpeg', 0.95);
@@ -593,15 +612,14 @@
         statusText.innerHTML = "✅ <b>Photo Ready:</b> Tap 'Share WhatsApp' below.";
       } catch (err) {
         statusText.innerHTML = "❌ <b>Capture Error.</b> Please press Retake.";
-        console.error(err);
+        console.error("takeSnapshot Error:", err);
       }
     }
 
-    // ==========================================
-    // LAG-FREE VIDEO RECORDING (HARDWARE ENCODED)
-    // ==========================================
+    // ================================================================
+    // REAL-TIME WATERMARKED VIDEO RECORDING (HARDWARE 30FPS + SOUND)
+    // ================================================================
     function getOptimalMimeType() {
-      // Prioritize hardware H.264 / MP4 for silky smooth 30fps with 0 lag
       const types = [
         'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
         'video/mp4;codecs=avc1',
@@ -629,18 +647,52 @@
       }
 
       recordedChunks = [];
+      const rw = video.videoWidth || 1280;
+      const rh = video.videoHeight || 720;
+      recCanvas.width = rw;
+      recCanvas.height = rh;
+      const recCtx = recCanvas.getContext('2d');
+
+      isRecordingActive = true;
+
+      // Real-time canvas frame rendering loop (draws camera + live watermark on every frame!)
+      function renderRecordingFrame() {
+        if (!isRecordingActive) return;
+        recCtx.drawImage(video, 0, 0, rw, rh);
+        drawWatermarkTemplate(recCtx, rw, rh);
+        requestAnimationFrame(renderRecordingFrame);
+      }
+      renderRecordingFrame();
+
+      // Combine real-time watermarked canvas video track with microphone audio track
+      let streamToRecord = currentStream;
+      if (typeof recCanvas.captureStream === 'function') {
+        try {
+          const canvasStream = recCanvas.captureStream(30);
+          const audioTracks = currentStream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            streamToRecord = new MediaStream([canvasStream.getVideoTracks()[0], audioTracks[0]]);
+          } else {
+            streamToRecord = canvasStream;
+          }
+        } catch (e) {
+          console.warn("captureStream fallback to camera stream", e);
+          streamToRecord = currentStream;
+        }
+      }
+
       const mime = getOptimalMimeType();
       recordedVideoMime = mime || 'video/mp4';
 
       const recorderOptions = {
-        videoBitsPerSecond: 2500000 // 2.5 Mbps crisp 720p with 0 frame drops
+        videoBitsPerSecond: 2500000 // 2.5 Mbps
       };
       if (mime) recorderOptions.mimeType = mime;
 
       try {
-        mediaRecorder = new MediaRecorder(currentStream, recorderOptions);
+        mediaRecorder = new MediaRecorder(streamToRecord, recorderOptions);
       } catch (e) {
-        mediaRecorder = new MediaRecorder(currentStream);
+        mediaRecorder = new MediaRecorder(streamToRecord);
       }
 
       mediaRecorder.ondataavailable = (event) => {
@@ -650,12 +702,12 @@
       };
 
       mediaRecorder.onstop = () => {
+        isRecordingActive = false;
         const finalType = recordedVideoMime.includes('mp4') ? 'video/mp4' : 'video/webm';
         recordedVideoBlob = new Blob(recordedChunks, { type: finalType });
         showVideoPreview(recordedVideoBlob);
       };
 
-      // Start without forced 1s slicing for perfectly smooth continuous recording
       mediaRecorder.start();
       recordSeconds = 0;
 
@@ -683,6 +735,7 @@
     }
 
     function stopVideoRecording() {
+      isRecordingActive = false;
       if (recordInterval) {
         clearInterval(recordInterval);
         recordInterval = null;
@@ -709,13 +762,12 @@
     }
 
     // ==========================================
-    // ROBUST WHATSAPP SHARING
+    // DIRECT WHATSAPP SHARING
     // ==========================================
     async function shareToWhatsApp() {
       const now = getExactCurrentTime();
       const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
 
-      // Clean, well-structured patrol report
       const dutyReport = `*🛡️ Platoon Digital Patrol Report*%0A` +
         `📍 *Location:* ${encodeURIComponent(currentHeadline)}%0A` +
         `🏠 *Area:* ${encodeURIComponent(currentSubAddress)}%0A` +
@@ -725,11 +777,10 @@
 
       try {
         if (currentPreviewType === 'photo') {
-          // Prepare JPEG file
           const blob = lastCapturedPhotoBlob || await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
           const file = new File([blob], `Platoon_Patrol_${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-          // CRITICAL: On Android WhatsApp, pass ONLY files: [file] without conflicting text
+          // Direct file share for mobile WhatsApp
           if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
               files: [file]
@@ -738,14 +789,14 @@
             return;
           }
 
-          // Fallback if device browser does not support file WebShare:
+          // Fallback
           downloadBlob(blob, file.name);
           window.location.href = `whatsapp://send?text=${dutyReport}`;
           statusText.innerHTML = "✅ Photo saved! Opening WhatsApp...";
 
         } else if (currentPreviewType === 'video' && recordedVideoBlob) {
-          // Prepare MP4 video file
-          const file = new File([recordedVideoBlob], `Platoon_Patrol_${Date.now()}.mp4`, { type: 'video/mp4' });
+          const ext = recordedVideoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+          const file = new File([recordedVideoBlob], `Platoon_Patrol_${Date.now()}.${ext}`, { type: recordedVideoBlob.type });
 
           if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
@@ -762,7 +813,6 @@
         }
       } catch (e) {
         if (e.name !== 'AbortError') {
-          // If native share threw an error other than user cancel, open WhatsApp directly
           window.open(`https://api.whatsapp.com/send?text=${dutyReport}`, '_blank');
         }
       }
