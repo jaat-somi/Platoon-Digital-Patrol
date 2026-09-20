@@ -7,60 +7,94 @@
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0a0f1d">
   <link rel="apple-touch-icon" href="logo.png">
   <style>
-    :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.8); --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --text: #f8fafc; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; user-select: none; }
+    :root {
+      --bg: #070b14;
+      --panel: rgba(15, 23, 42, 0.85);
+      --primary: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --accent: #f59e0b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
     body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     
-    header { background: var(--panel); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); z-index: 10; }
-    header h1 { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
-    #live-clock { font-size: 0.9rem; color: #94a3b8; font-weight: 600; font-variant-numeric: tabular-nums; }
+    header { background: var(--panel); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); z-index: 10; }
+    header .brand-title { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; font-weight: 800; color: #fff; letter-spacing: 0.3px; }
+    header .brand-title span { color: var(--accent); }
+    #live-clock { font-size: 0.88rem; color: #cbd5e1; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
 
-    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 15px; overflow-y: auto; padding-bottom: 120px; }
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px; overflow-y: auto; padding-bottom: 110px; }
     
-    #video-container { position: relative; width: 100%; max-width: 480px; aspect-ratio: 3/4; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+    #viewfinder-wrapper { position: relative; width: 100%; max-width: 460px; aspect-ratio: 3/4; background: #000; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
     video { width: 100%; height: 100%; object-fit: cover; }
-    
-    .status-panel { width: 100%; max-width: 480px; background: var(--panel); margin-top: 15px; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); }
-    #status { font-size: 0.9rem; color: #fbbf24; text-align: left; font-weight: 600; line-height: 1.4; display: flex; align-items: center; gap: 8px; }
-    
-    #install-banner { display: none; width: 100%; max-width: 480px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); margin-bottom: 15px; padding: 12px 16px; border-radius: 12px; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
-    #install-banner span { font-size: 0.85rem; font-weight: 600; color: #fff; }
-    #install-btn { background: #fff; color: #1e293b; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; text-transform: uppercase; }
 
-    .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--panel); padding: 15px 20px 25px 20px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 10; }
-    
-    .btn { width: 100%; max-width: 480px; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 8px; }
-    .btn:active { transform: scale(0.97); }
-    
-    .btn-row { display: flex; gap: 10px; width: 100%; max-width: 480px; }
-    .btn-switch { background-color: #334155; color: white; flex: 1; }
-    .btn-capture { background-color: var(--success); color: white; flex: 2; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
-    
-    .btn-action-row { display: none; width: 100%; max-width: 480px; gap: 10px; }
-    .btn-retake { background-color: #475569; color: white; flex: 1; }
-    .btn-download { background-color: var(--primary); color: white; flex: 2; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+    /* Live Recording Badge */
+    #recording-indicator { display: none; position: absolute; top: 14px; left: 14px; background: rgba(239, 68, 68, 0.9); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; letter-spacing: 0.5px; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(239,68,68,0.5); z-index: 5; animation: pulseRed 1.2s infinite; }
+    .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+    @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
 
-    #preview-container { width: 100%; max-width: 480px; margin-top: 15px; display: none; }
-    canvas { width: 100%; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    .status-panel { width: 100%; max-width: 460px; background: var(--panel); margin-top: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); }
+    #status { font-size: 0.85rem; color: #fbbf24; text-align: left; font-weight: 600; line-height: 1.35; display: flex; align-items: center; gap: 8px; }
+    
+    #install-banner { display: none; width: 100%; max-width: 460px; background: linear-gradient(135deg, #1e40af, #3b82f6); margin-bottom: 10px; padding: 10px 14px; border-radius: 12px; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
+    #install-banner span { font-size: 0.82rem; font-weight: 700; color: #fff; }
+    #install-btn { background: #fff; color: #1e3a8a; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; }
+
+    /* Controls Action Bar */
+    .action-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 15, 29, 0.92); padding: 14px 20px 22px 20px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(16px); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 20; }
+    
+    .btn-row { display: flex; gap: 10px; width: 100%; max-width: 460px; align-items: center; }
+    
+    /* Small circular flip button */
+    .btn-flip { width: 50px; height: 50px; border-radius: 50%; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center; align-items: center; font-size: 1.25rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, background 0.2s; }
+    .btn-flip:active { transform: rotate(180deg) scale(0.92); background: #334155; }
+    
+    .btn-capture { flex: 1; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35); text-transform: uppercase; letter-spacing: 0.3px; }
+    .btn-capture:active { transform: scale(0.97); }
+
+    .btn-record { flex: 1; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); text-transform: uppercase; letter-spacing: 0.3px; }
+    .btn-record:active { transform: scale(0.97); }
+
+    .btn-stop-rec { width: 100%; height: 52px; border-radius: 14px; background: #ef4444; color: white; border: 2px solid rgba(255,255,255,0.2); font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(239,68,68,0.6); animation: pulseStop 1.5s infinite; }
+    @keyframes pulseStop { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); } }
+
+    /* Preview controls */
+    .btn-action-row { display: none; width: 100%; max-width: 460px; gap: 10px; }
+    .btn-retake { flex: 1; height: 50px; background: #334155; color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
+    .btn-whatsapp { flex: 2; height: 50px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4); text-transform: uppercase; letter-spacing: 0.3px; }
+    .btn-whatsapp:active { transform: scale(0.97); }
+
+    #preview-container { width: 100%; max-width: 460px; display: none; }
+    canvas { width: 100%; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; }
+    #videoPreview { width: 100%; aspect-ratio: 3/4; border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); object-fit: cover; display: none; background: #000; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🛡️ Platoon Digital Patrol</h1>
-    <div id="live-clock">00:00:00</div>
+    <div class="brand-title">
+      🛡️ <span>Platoon</span> Digital Patrol
+    </div>
+    <div id="live-clock">--:--:-- IST</div>
   </header>
 
   <main>
     <div id="install-banner">
-      <span>📲 Install App for Full Experience</span>
+      <span>📲 Install App on Phone Home Screen</span>
       <button id="install-btn" onclick="installApp()">Install</button>
     </div>
 
-    <div id="video-container">
+    <!-- Viewfinder Area -->
+    <div id="viewfinder-wrapper">
+      <div id="recording-indicator">
+        <span class="rec-dot"></span>
+        <span id="rec-timer">REC 00:00</span>
+      </div>
       <video id="video" autoplay playsinline muted></video>
     </div>
 
@@ -68,23 +102,44 @@
       <div id="status">⏳ Connecting to Camera & GPS...</div>
     </div>
 
+    <!-- Preview Container (Photo Canvas or Video Player) -->
     <div id="preview-container">
       <canvas id="canvas"></canvas>
+      <video id="videoPreview" controls playsinline></video>
     </div>
   </main>
 
+  <!-- Bottom Actions -->
   <div class="action-bar">
+    <!-- Default Camera Controls -->
     <div class="btn-row" id="cameraControls">
-      <button class="btn btn-switch" id="switchBtn" onclick="toggleCamera()">🔄 Flip</button>
-      <button class="btn btn-capture" id="captureBtn" onclick="takeSnapshot()">📸 Capture</button>
+      <button class="btn-flip" id="flipBtn" onclick="toggleCamera()" title="Flip Camera">🔄</button>
+      <button class="btn-capture" id="captureBtn" onclick="takeSnapshot()">📸 Photo</button>
+      <button class="btn-record" id="recordBtn" onclick="startVideoRecording()">🎥 Video</button>
     </div>
+
+    <!-- Active Recording Controls -->
+    <div class="btn-row" id="recordingControls" style="display: none;">
+      <button class="btn-stop-rec" onclick="stopVideoRecording()">⏹️ Stop Recording (<span id="stop-timer">00:00</span>)</button>
+    </div>
+
+    <!-- Preview Mode Controls: Only Retake and Share to WhatsApp -->
     <div class="btn-action-row" id="previewControls">
-      <button class="btn btn-retake" onclick="resetCamera()">🔄 Retake</button>
-      <button class="btn btn-download" id="downloadBtn" onclick="shareImage()">🚀 Share WhatsApp</button>
+      <button class="btn-retake" onclick="resetCamera()">🔄 Retake</button>
+      <button class="btn-whatsapp" id="whatsappBtn" onclick="shareToWhatsApp()">🚀 Share WhatsApp</button>
     </div>
   </div>
 
   <script>
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          console.log('ServiceWorker registered successfully.');
+        }).catch(err => console.log('ServiceWorker registration failed: ', err));
+      });
+    }
+
     let deferredPrompt;
     const installBanner = document.getElementById('install-banner');
 
@@ -110,41 +165,91 @@
       installBanner.style.display = 'none';
     }
 
+    // DOM Elements
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
+    const videoPreview = document.getElementById('videoPreview');
     const statusText = document.getElementById('status');
+    const liveClock = document.getElementById('live-clock');
+    const recIndicator = document.getElementById('recording-indicator');
+    const recTimer = document.getElementById('rec-timer');
+    const stopTimer = document.getElementById('stop-timer');
     
-    let currentLat = "0.00000";
-    let currentLon = "0.00000";
-    let currentAddress = "Fetching area name...";
-    let isGpsLocked = false; // Prevents taking photo before GPS is ready
+    // State
+    let currentLat = "0.000000";
+    let currentLon = "0.000000";
+    let currentAddress = "Fetching precise location...";
+    let isGpsLocked = false;
     let addressFetched = false;
-    let logoImage = new Image();
-    
-    logoImage.crossOrigin = "anonymous";
-    logoImage.src = "logo.png"; 
-
     let currentFacingMode = "environment"; 
     let currentStream = null;
 
+    // MediaRecorder State for Video Recording
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordInterval = null;
+    let recordSeconds = 0;
+    let recordedVideoBlob = null;
+    let lastCapturedPhotoBlob = null;
+    let currentPreviewType = null; // 'photo' or 'video'
+
+    // Logo Image
+    let logoImage = new Image();
+    logoImage.crossOrigin = "anonymous";
+    logoImage.src = "logo.png";
+
+    // Mini-Map Tile Image for GPS Camera corner stamp
+    let mapTileImage = new Image();
+    mapTileImage.crossOrigin = "anonymous";
+    let mapTileLoaded = false;
+    let lastLoadedTileKey = "";
+
+    mapTileImage.onload = () => { mapTileLoaded = true; };
+    mapTileImage.onerror = () => { mapTileLoaded = false; };
+
+    // Strict Internet Time Synchronization (Not Phone Time)
+    window.exactServerBaseTime = null;
+    window.serverSyncMark = null;
+
     async function syncInternetTime() {
-      try {
-        let response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata');
-        let data = await response.json();
-        window.exactServerTime = data && data.datetime ? new Date(data.datetime) : new Date();
-      } catch(e) {
-        window.exactServerTime = new Date();
+      const endpoints = [
+        'https://worldtimeapi.org/api/timezone/Asia/Kolkata',
+        'https://timeapi.io/api/time/current/zone?timeZone=Asia/Kolkata'
+      ];
+      for (let url of endpoints) {
+        try {
+          let response = await fetch(url, { cache: "no-store" });
+          let data = await response.json();
+          let serverIso = data.datetime || data.dateTime;
+          if (serverIso) {
+            window.exactServerBaseTime = new Date(serverIso);
+            window.serverSyncMark = Date.now();
+            return;
+          }
+        } catch(e) { /* try next endpoint */ }
+      }
+      if (!window.exactServerBaseTime) {
+        window.exactServerBaseTime = new Date();
+        window.serverSyncMark = Date.now();
       }
     }
     syncInternetTime();
     setInterval(syncInternetTime, 60000);
 
-    setInterval(() => {
-      const now = window.exactServerTime ? new Date(window.exactServerTime.getTime() + (new Date() - window.lastSyncMark || 0)) : new Date();
-      document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
-    }, 1000);
-    window.lastSyncMark = new Date();
+    function getExactCurrentTime() {
+      if (!window.exactServerBaseTime) return new Date();
+      const elapsed = Date.now() - (window.serverSyncMark || Date.now());
+      return new Date(window.exactServerBaseTime.getTime() + elapsed);
+    }
 
+    // Update Header Clock
+    setInterval(() => {
+      const now = getExactCurrentTime();
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
+      liveClock.innerText = `${timeStr} (+05:30 IST)`;
+    }, 1000);
+
+    // Rounded Rectangle Helper for Canvas
     function drawRoundRect(ctx, x, y, width, height, radius) {
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
@@ -155,14 +260,32 @@
       ctx.closePath();
     }
 
+    // Camera Management
     async function startCamera() {
       if (currentStream) currentStream.getTracks().forEach(track => track.stop());
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: currentFacingMode } }, audio: false });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: currentFacingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: true // Enabled for video duty recording
+        });
         currentStream = stream;
         video.srcObject = stream;
       } catch (err) {
-        statusText.innerHTML = "❌ <b>Camera Blocked.</b> Please allow camera access.";
+        // Fallback without audio if mic permission is blocked
+        try {
+          const streamNoAudio = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: currentFacingMode } },
+            audio: false
+          });
+          currentStream = streamNoAudio;
+          video.srcObject = streamNoAudio;
+        } catch(e) {
+          statusText.innerHTML = "❌ <b>Camera Blocked.</b> Please allow camera permissions.";
+        }
       }
     }
 
@@ -172,34 +295,76 @@
     }
 
     function resetCamera() {
+      document.getElementById('viewfinder-wrapper').style.display = 'block';
       document.getElementById('preview-container').style.display = 'none';
-      document.getElementById('video-container').style.display = 'block';
-      document.getElementById('previewControls').style.display = 'none';
+      canvas.style.display = 'none';
+      videoPreview.style.display = 'none';
+      if (videoPreview.src) {
+        videoPreview.pause();
+        videoPreview.src = "";
+      }
       document.getElementById('cameraControls').style.display = 'flex';
-      statusText.innerHTML = isGpsLocked ? `🟢 <b>Ready:</b> ${currentAddress}` : "⏳ <b>Finding Location...</b>";
+      document.getElementById('recordingControls').style.display = 'none';
+      document.getElementById('previewControls').style.display = 'none';
+      recIndicator.style.display = 'none';
+      
+      currentPreviewType = null;
+      recordedVideoBlob = null;
+      lastCapturedPhotoBlob = null;
+      statusText.innerHTML = isGpsLocked ? `🟢 <b>Secured:</b> ${currentAddress}` : "⏳ <b>Finding Location...</b>";
       startCamera();
     }
 
-    // GPS & Address Fetching Logic
+    // OpenStreetMap Tile Calculation for Mini Map Corner Stamp
+    function updateMapTile(lat, lon) {
+      const zoom = 16;
+      const latRad = lat * Math.PI / 180;
+      const n = Math.pow(2, zoom);
+      const x = Math.floor((lon + 180) / 360 * n);
+      const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+      const tileKey = `${zoom}/${x}/${y}`;
+
+      if (tileKey !== lastLoadedTileKey) {
+        lastLoadedTileKey = tileKey;
+        mapTileLoaded = false;
+        mapTileImage.src = `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+      }
+    }
+
+    // Geolocation & Granular Landmark Parsing (zoom=18)
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
         async (pos) => {
-          isGpsLocked = true; // Lock confirmed
+          isGpsLocked = true;
           currentLat = pos.coords.latitude.toFixed(6);
           currentLon = pos.coords.longitude.toFixed(6);
 
+          // Update mini-map tile
+          updateMapTile(pos.coords.latitude, pos.coords.longitude);
+
           if (!addressFetched) {
-            statusText.innerHTML = `📡 <b>GPS Locked:</b> Fetching location name...`;
+            statusText.innerHTML = `📡 <b>GPS Locked:</b> Fetching precise landmark...`;
             try {
-              let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=16&addressdetails=1`);
+              let response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLat}&lon=${currentLon}&zoom=18&addressdetails=1`);
               let data = await response.json();
               
               if(data && data.address) {
-                let place = data.address.suburb || data.address.village || data.address.town || data.address.city || data.address.county || "";
+                // Prioritize specific building, hospital, amenity, road
+                let specific = data.address.amenity || data.address.hospital || data.address.building || data.address.road || data.address.neighbourhood || "";
+                
+                // Then fetch the broader village, town, or city
+                let place = data.address.village || data.address.suburb || data.address.town || data.address.city || data.address.county || "";
                 let state = data.address.state || "";
-                currentAddress = [place, state].filter(Boolean).join(", ");
+                
+                let parts = [];
+                if (specific) parts.push(specific);
+                if (place && place !== specific) parts.push(place);
+                if (state) parts.push(state);
+                
+                currentAddress = parts.join(", ");
+                
                 if(!currentAddress && data.display_name) {
-                    currentAddress = data.display_name.split(",").slice(0, 2).join(", ");
+                  currentAddress = data.display_name.split(",").slice(0, 3).join(", ");
                 }
               }
               addressFetched = true;
@@ -211,9 +376,8 @@
           statusText.innerHTML = `🟢 <b>Secured:</b> ${currentAddress}`;
         },
         (err) => {
-          // If it times out while trying to find high accuracy, just keep waiting politely
           if (err.code === 3) {
-            statusText.innerHTML = "⏳ <b>GPS Search:</b> Finding satellites (Stay outdoors)...";
+            statusText.innerHTML = "⏳ <b>GPS Search:</b> Acquiring satellites (Stay outdoors)...";
           } else {
             statusText.innerHTML = "⚠️ <b>GPS Error:</b> Turn on device Location Services.";
           }
@@ -222,8 +386,10 @@
       );
     }
 
+    // ==========================================
+    // PHOTO CAPTURE WITH MODERN TINTED GLASS STAMP
+    // ==========================================
     function takeSnapshot() {
-      // Guard Check: Prevent photo capture if GPS is not yet locked
       if (!isGpsLocked) {
         alert("कृपया GPS लोकेशन आने का इंतज़ार करें (2-3 सेकंड)।\nPlease wait for the GPS location to lock before capturing.");
         return;
@@ -232,8 +398,11 @@
       try {
         if (video.videoWidth === 0) return;
         
-        document.getElementById('video-container').style.display = 'none';
+        currentPreviewType = 'photo';
+        document.getElementById('viewfinder-wrapper').style.display = 'none';
         document.getElementById('preview-container').style.display = 'block';
+        canvas.style.display = 'block';
+        videoPreview.style.display = 'none';
         document.getElementById('cameraControls').style.display = 'none';
         document.getElementById('previewControls').style.display = 'flex';
 
@@ -243,106 +412,331 @@
         const cw = canvas.width;
         const ch = canvas.height;
 
+        // 1. Draw camera frame
         ctx.drawImage(video, 0, 0, cw, ch);
 
+        // 2. Logo at Top-Left (Per explicit requirement)
         try {
           if (logoImage.complete && logoImage.naturalWidth > 0) {
-            const logoWidth = cw * 0.20; 
+            const logoWidth = cw * 0.19; 
             const logoHeight = logoWidth * (logoImage.naturalHeight / logoImage.naturalWidth);
-            ctx.drawImage(logoImage, cw * 0.04, ch * 0.02, logoWidth, logoHeight);
+            const logoX = cw * 0.04;
+            const logoY = ch * 0.025;
+            
+            // Subtle backing glow for logo so it pops on any background
+            ctx.save();
+            ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+            ctx.shadowBlur = 12;
+            ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
+            ctx.restore();
           }
         } catch (e) { console.log("Logo skip"); }
 
-        const pad = cw * 0.03;
-        const dashHeight = ch * 0.24; 
-        const dashY = ch - dashHeight - pad;
-        const dashWidth = cw - (pad * 2);
+        // 3. Bottom Tinted Glass Bar with Rounded Corners
+        const pad = cw * 0.035;
+        const cardHeight = Math.max(ch * 0.20, cw * 0.32);
+        const cardY = ch - cardHeight - pad;
+        const cardWidth = cw - (pad * 2);
+        const cardRadius = Math.min(20, cw * 0.035);
 
-        ctx.fillStyle = "rgba(15, 23, 42, 0.90)"; 
-        drawRoundRect(ctx, pad, dashY, dashWidth, dashHeight, 12);
+        // Tinted glass fill
+        ctx.fillStyle = "rgba(10, 15, 29, 0.88)";
+        drawRoundRect(ctx, pad, cardY, cardWidth, cardHeight, cardRadius);
         ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+
+        // Subtle modern glass border
+        ctx.lineWidth = Math.max(1.5, cw * 0.002);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
         ctx.stroke();
 
-        const leftPanelWidth = dashWidth * 0.25;
-        const badgeHeight = dashHeight * 0.28;
-        
-        ctx.fillStyle = "#3b82f6"; 
-        drawRoundRect(ctx, pad + 10, dashY + 10, leftPanelWidth, badgeHeight, 6);
-        ctx.fill();
+        // 4. Mini-Map Square on the Left Corner
+        const mapMargin = cardHeight * 0.10;
+        const mapSize = cardHeight - (mapMargin * 2);
+        const mapX = pad + mapMargin;
+        const mapY = cardY + mapMargin;
+        const mapRadius = Math.min(10, mapSize * 0.15);
 
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${cw * 0.022}px 'Courier New', monospace`;
+        ctx.save();
+        drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
+        ctx.clip();
+
+        if (mapTileLoaded && mapTileImage.complete && mapTileImage.naturalWidth > 0) {
+          ctx.drawImage(mapTileImage, mapX, mapY, mapSize, mapSize);
+        } else {
+          // Tactical dark grid fallback if offline
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(mapX, mapY, mapSize, mapSize);
+          ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
+          ctx.lineWidth = 1;
+          for (let gx = mapX; gx <= mapX + mapSize; gx += mapSize / 4) {
+            ctx.beginPath(); ctx.moveTo(gx, mapY); ctx.lineTo(gx, mapY + mapSize); ctx.stroke();
+          }
+          for (let gy = mapY; gy <= mapY + mapSize; gy += mapSize / 4) {
+            ctx.beginPath(); ctx.moveTo(mapX, gy); ctx.lineTo(mapX + mapSize, gy); ctx.stroke();
+          }
+        }
+
+        // Center Target Crosshair & Pin on Mini-Map
+        const pinCenterX = mapX + (mapSize / 2);
+        const pinCenterY = mapY + (mapSize / 2);
+
+        // Map crosshair circle
+        ctx.beginPath();
+        ctx.arc(pinCenterX, pinCenterY, mapSize * 0.18, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Pin emoji
+        ctx.font = `${mapSize * 0.38}px Arial, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("PATROL APP", pad + 10 + (leftPanelWidth/2), dashY + 10 + (badgeHeight/2));
+        ctx.fillText("📍", pinCenterX, pinCenterY - (mapSize * 0.05));
+        ctx.restore();
 
-        ctx.font = `${cw * 0.08}px Arial`;
-        ctx.fillText("📍", pad + 10 + (leftPanelWidth/2), dashY + 10 + badgeHeight + (dashHeight*0.25));
-        
-        ctx.fillStyle = "#10b981"; 
-        ctx.font = `bold ${cw * 0.018}px 'Courier New', monospace`;
-        ctx.fillText("SECURE", pad + 10 + (leftPanelWidth/2), dashY + 10 + badgeHeight + (dashHeight*0.48));
+        // Mini-Map Border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+        ctx.lineWidth = 1.5;
+        drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
+        ctx.stroke();
 
-        const textX = pad + 10 + leftPanelWidth + 15;
-        let textY = dashY + 28; 
-        const baseFont = cw * 0.025;
-        const spacing = baseFont * 1.7; 
+        // 5. Text Data Stack (Right of the Mini-Map)
+        const textX = mapX + mapSize + (cardWidth * 0.035);
+        const contentWidth = (pad + cardWidth) - textX - (cardWidth * 0.02);
+        let textY = cardY + (cardHeight * 0.22);
+        const baseFont = Math.max(14, cw * 0.026);
+        const lineHeight = cardHeight * 0.21;
 
         ctx.textAlign = "left";
-        ctx.textBaseline = "alphabetic";
+        ctx.textBaseline = "middle";
 
+        // Line 1: Organization Name + Verified Badge
+        ctx.font = `bold ${Math.max(16, cw * 0.032)}px system-ui, -apple-system, sans-serif`;
         ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${cw * 0.033}px 'Courier New', monospace`;
-        ctx.fillText("Platoon Securitas", textX, textY);
+        ctx.fillText("Platoon Digital Patrol", textX, textY);
 
-        textY += spacing;
-        ctx.font = `bold ${baseFont}px 'Courier New', monospace`;
-        ctx.fillStyle = "#34d399";
-        let displayAddr = currentAddress.length > 36 ? currentAddress.substring(0, 34) + "..." : currentAddress;
+        // Green verified badge pill
+        const orgTextWidth = ctx.measureText("Platoon Digital Patrol").width;
+        const badgeX = textX + orgTextWidth + 10;
+        if (badgeX + 80 < pad + cardWidth) {
+          ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
+          drawRoundRect(ctx, badgeX, textY - 9, 74, 18, 4);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+          ctx.stroke();
+          ctx.fillStyle = "#34d399";
+          ctx.font = `bold ${Math.max(10, cw * 0.019)}px system-ui, sans-serif`;
+          ctx.fillText("● VERIFIED", badgeX + 6, textY);
+        }
+
+        // Line 2: Exact Detailed Location
+        textY += lineHeight;
+        ctx.font = `bold ${baseFont}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#fde047"; // High-visibility bright amber/gold
+        
+        let displayAddr = currentAddress;
+        // Truncate cleanly with ellipsis if unusually long
+        if (ctx.measureText(displayAddr).width > contentWidth) {
+          while (ctx.measureText(displayAddr + "...").width > contentWidth && displayAddr.length > 10) {
+            displayAddr = displayAddr.substring(0, displayAddr.length - 1);
+          }
+          displayAddr += "...";
+        }
         ctx.fillText(displayAddr, textX, textY);
 
-        textY += spacing;
-        const now = window.exactServerTime ? new Date(window.exactServerTime) : new Date();
-        const dateStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-        const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
-        ctx.font = `bold ${baseFont}px 'Courier New', monospace`;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(`TIME: ${dateStr} - ${timeStr} IST`, textX, textY);
-
-        textY += spacing;
-        ctx.font = `normal ${cw * 0.021}px 'Courier New', monospace`;
-        ctx.fillStyle = "#f8fafc";
-        ctx.fillText(`GPS: ${currentLat}° N, ${currentLon}° E`, textX, textY);
-
-        statusText.innerHTML = "✅ <b>Success:</b> Photo ready to share.";
+        // Line 3: Strict Internet Time (+05:30 IST)
+        textY += lineHeight;
+        const now = getExactCurrentTime();
+        const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+        const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
         
+        ctx.font = `600 ${Math.max(12, cw * 0.023)}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillText(`🕒 ${dateStr}, ${timeStr} (+05:30 IST)`, textX, textY);
+
+        // Line 4: GPS Coordinates
+        textY += lineHeight;
+        ctx.font = `500 ${Math.max(11, cw * 0.021)}px system-ui, -apple-system, sans-serif`;
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(`🌐 GPS: ${currentLat}° N, ${currentLon}° E`, textX, textY);
+
+        // Store blob for WhatsApp sharing
+        canvas.toBlob((blob) => {
+          lastCapturedPhotoBlob = blob;
+        }, 'image/jpeg', 0.95);
+
+        statusText.innerHTML = "✅ <b>Photo Ready:</b> Tap 'Share WhatsApp' below.";
       } catch (err) {
         statusText.innerHTML = "❌ <b>Capture Error.</b> Please press Retake.";
+        console.error(err);
       }
     }
 
-    async function shareImage() {
-      canvas.toBlob(async (blob) => {
+    // ==========================================
+    // VIDEO DUTY RECORDING
+    // ==========================================
+    function startVideoRecording() {
+      if (!isGpsLocked) {
+        alert("कृपया GPS लोकेशन आने का इंतज़ार करें।\nPlease wait for GPS location before recording video.");
+        return;
+      }
+      if (!currentStream) {
+        alert("Camera stream not available.");
+        return;
+      }
+
+      recordedChunks = [];
+      const options = { mimeType: 'video/webm;codecs=vp8,opus' };
+      
+      try {
+        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+          mediaRecorder = new MediaRecorder(currentStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+          mediaRecorder = new MediaRecorder(currentStream, { mimeType: 'video/mp4' });
+        } else {
+          mediaRecorder = new MediaRecorder(currentStream);
+        }
+      } catch (e) {
+        mediaRecorder = new MediaRecorder(currentStream);
+      }
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const mimeType = mediaRecorder.mimeType || 'video/webm';
+        recordedVideoBlob = new Blob(recordedChunks, { type: mimeType });
+        showVideoPreview(recordedVideoBlob);
+      };
+
+      mediaRecorder.start(1000); // 1s slice
+      recordSeconds = 0;
+
+      // UI Switch to Recording Mode
+      document.getElementById('cameraControls').style.display = 'none';
+      document.getElementById('recordingControls').style.display = 'flex';
+      recIndicator.style.display = 'flex';
+      recTimer.innerText = "REC 00:00";
+      stopTimer.innerText = "00:00";
+
+      recordInterval = setInterval(() => {
+        recordSeconds++;
+        const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+        const secs = String(recordSeconds % 60).padStart(2, '0');
+        const timeFormatted = `${mins}:${secs}`;
+        recTimer.innerText = `REC ${timeFormatted}`;
+        stopTimer.innerText = timeFormatted;
+
+        // Auto stop at 60 seconds max
+        if (recordSeconds >= 60) {
+          stopVideoRecording();
+        }
+      }, 1000);
+
+      statusText.innerHTML = "🔴 <b>Recording Patrol Video...</b> Tap Stop when finished.";
+    }
+
+    function stopVideoRecording() {
+      if (recordInterval) {
+        clearInterval(recordInterval);
+        recordInterval = null;
+      }
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      recIndicator.style.display = 'none';
+      document.getElementById('recordingControls').style.display = 'none';
+    }
+
+    function showVideoPreview(blob) {
+      currentPreviewType = 'video';
+      document.getElementById('viewfinder-wrapper').style.display = 'none';
+      document.getElementById('preview-container').style.display = 'block';
+      canvas.style.display = 'none';
+      videoPreview.style.display = 'block';
+      videoPreview.src = URL.createObjectURL(blob);
+      videoPreview.play();
+
+      document.getElementById('cameraControls').style.display = 'none';
+      document.getElementById('previewControls').style.display = 'flex';
+      statusText.innerHTML = "✅ <b>Video Ready:</b> Tap 'Share WhatsApp' below.";
+    }
+
+    // ==========================================
+    // WHATSAPP SHARING (ONLY OPTION)
+    // ==========================================
+    async function shareToWhatsApp() {
+      const now = getExactCurrentTime();
+      const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
+
+      const dutyText = `*🛡️ Platoon Digital Patrol Report*%0A` +
+        `📍 *Location:* ${encodeURIComponent(currentAddress)}%0A` +
+        `🕒 *Time:* ${dateStr}, ${timeStr} (+05:30 IST)%0A` +
+        `🌐 *GPS:* ${currentLat}° N, ${currentLon}° E%0A` +
+        `✅ *Status:* Official Verified Check-In`;
+
+      if (currentPreviewType === 'photo' && (lastCapturedPhotoBlob || canvas)) {
+        const blob = lastCapturedPhotoBlob || await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
         const file = new File([blob], `Platoon_Patrol_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
-            await navigator.share({ files: [file], title: 'Duty Patrol Check-In' });
+            await navigator.share({
+              files: [file],
+              title: 'Platoon Digital Patrol Check-In',
+              text: `Platoon Digital Patrol | ${currentAddress} | ${timeStr} (+05:30 IST)`
+            });
             resetCamera();
-          } catch (error) { fallbackDownload(); }
-        } else { fallbackDownload(); }
-      }, 'image/jpeg', 0.95);
+            return;
+          } catch (e) {
+            // Cancelled or fallback
+          }
+        }
+        
+        // Fallback for browsers without direct file WebShare
+        downloadBlob(blob, file.name);
+        window.open(`https://api.whatsapp.com/send?text=${dutyText}`, '_blank');
+        statusText.innerHTML = "✅ Photo saved! Opening WhatsApp...";
+
+      } else if (currentPreviewType === 'video' && recordedVideoBlob) {
+        const ext = recordedVideoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+        const file = new File([recordedVideoBlob], `Platoon_Patrol_${Date.now()}.${ext}`, { type: recordedVideoBlob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Platoon Digital Patrol Video Report',
+              text: `Platoon Digital Patrol Video | ${currentAddress} | ${timeStr} (+05:30 IST)`
+            });
+            resetCamera();
+            return;
+          } catch (e) {
+            // Cancelled or fallback
+          }
+        }
+
+        // Fallback
+        downloadBlob(recordedVideoBlob, file.name);
+        window.open(`https://api.whatsapp.com/send?text=${dutyText}`, '_blank');
+        statusText.innerHTML = "✅ Video saved! Opening WhatsApp...";
+      }
     }
 
-    function fallbackDownload() {
+    function downloadBlob(blob, filename) {
       const link = document.createElement('a');
-      link.download = `Platoon_Digital_Patrol_${Date.now()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
       link.click();
-      statusText.innerHTML = "✅ <b>Saved!</b> Send to WhatsApp manually.";
+      document.body.removeChild(link);
     }
 
+    // Launch Camera on Page Load
     startCamera();
   </script>
 </body>
