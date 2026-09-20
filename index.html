@@ -47,7 +47,7 @@
     header .brand-title span { color: var(--accent); }
     #live-clock { font-size: 0.82rem; color: #cbd5e1; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
 
-    /* Middle Content: Dynamically fits between header and action-bar */
+    /* Middle Area: Clean flex container that holds the 3:4 frame */
     main {
       flex: 1;
       min-height: 0;
@@ -61,10 +61,12 @@
       position: relative;
     }
     
+    /* Strict 3:4 Viewfinder matching real camera photo proportions */
     #viewfinder-wrapper {
       position: relative;
       width: 100%;
       max-width: 440px;
+      aspect-ratio: 3/4;
       flex: 1;
       min-height: 0;
       max-height: 100%;
@@ -101,10 +103,11 @@
     #install-banner span { font-size: 0.80rem; font-weight: 700; color: #fff; }
     #install-btn { background: #fff; color: #1e3a8a; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 800; font-size: 0.72rem; cursor: pointer; text-transform: uppercase; }
 
-    /* PREVIEW CONTAINER: Dynamically auto-fits the photo canvas to screen */
+    /* PREVIEW CONTAINER: Matches Viewfinder 3:4 Proportions 1:1 */
     #preview-container {
       width: 100%;
       max-width: 440px;
+      aspect-ratio: 3/4;
       flex: 1;
       min-height: 0;
       max-height: 100%;
@@ -112,22 +115,23 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      position: relative;
     }
     canvas {
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
-      width: auto;
-      height: auto;
       object-fit: contain;
       border-radius: 16px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.65);
       display: none;
     }
     #videoPreview {
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
-      width: auto;
-      height: auto;
       object-fit: contain;
       border-radius: 16px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.65);
@@ -152,7 +156,6 @@
     
     .btn-row { display: flex; gap: 10px; width: 100%; max-width: 440px; align-items: center; }
     
-    /* Compact circular flip button */
     .btn-flip { width: 48px; height: 48px; border-radius: 50%; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center; align-items: center; font-size: 1.25rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, background 0.2s; }
     .btn-flip:active { transform: rotate(180deg) scale(0.92); background: #334155; }
     
@@ -165,7 +168,6 @@
     .btn-stop-rec { width: 100%; height: 50px; border-radius: 14px; background: #ef4444; color: white; border: 2px solid rgba(255,255,255,0.25); font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 0 20px rgba(239,68,68,0.6); animation: pulseStop 1.5s infinite; }
     @keyframes pulseStop { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.98); } }
 
-    /* Preview controls: WhatsApp only */
     .btn-action-row { display: none; width: 100%; max-width: 440px; gap: 10px; }
     .btn-retake { flex: 1; height: 50px; background: #334155; color: white; border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
     .btn-whatsapp { flex: 2.2; height: 50px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 14px; font-weight: 800; font-size: 0.98rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 18px rgba(37, 211, 102, 0.45); text-transform: uppercase; letter-spacing: 0.3px; }
@@ -187,7 +189,7 @@
       <button id="install-btn" onclick="installApp()">Install</button>
     </div>
 
-    <!-- Viewfinder Area -->
+    <!-- Viewfinder Area (3:4 ratio) -->
     <div id="viewfinder-wrapper">
       <div id="recording-indicator">
         <span class="rec-dot"></span>
@@ -200,31 +202,28 @@
       <div id="status">⏳ Connecting to Camera & GPS...</div>
     </div>
 
-    <!-- Preview Container (Dynamically scaled to fit visible screen) -->
+    <!-- Preview Container (Exact 3:4 ratio, zero elongation) -->
     <div id="preview-container">
       <canvas id="canvas"></canvas>
       <video id="videoPreview" controls playsinline></video>
     </div>
 
-    <!-- Hidden Offscreen Canvas for Real-Time Watermarked Video Recording -->
+    <!-- Hidden Canvas for Real-Time Watermarked Video -->
     <canvas id="recCanvas" style="display: none;"></canvas>
   </main>
 
   <!-- Bottom Actions -->
   <div class="action-bar">
-    <!-- Camera Controls -->
     <div class="btn-row" id="cameraControls">
       <button class="btn-flip" id="flipBtn" onclick="toggleCamera()" title="Flip Camera">🔄</button>
       <button class="btn-capture" id="captureBtn" onclick="takeSnapshot()">📸 Photo</button>
       <button class="btn-record" id="recordBtn" onclick="startVideoRecording()">🎥 Video</button>
     </div>
 
-    <!-- Active Recording Controls -->
     <div class="btn-row" id="recordingControls" style="display: none;">
       <button class="btn-stop-rec" onclick="stopVideoRecording()">⏹️ Stop Recording (<span id="stop-timer">00:00</span>)</button>
     </div>
 
-    <!-- Preview Mode Controls: Only Retake and Share to WhatsApp -->
     <div class="btn-action-row" id="previewControls">
       <button class="btn-retake" onclick="resetCamera()">🔄 Retake</button>
       <button class="btn-whatsapp" id="whatsappBtn" onclick="shareToWhatsApp()">🚀 Share WhatsApp</button>
@@ -232,7 +231,6 @@
   </div>
 
   <script>
-    // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
@@ -288,7 +286,7 @@
     let currentFacingMode = "environment"; 
     let currentStream = null;
 
-    // MediaRecorder State for Real-Time Watermarked Video
+    // MediaRecorder State
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordInterval = null;
@@ -297,14 +295,14 @@
     let recordedVideoBlob = null;
     let recordedVideoMime = "video/mp4";
     let lastCapturedPhotoBlob = null;
-    let currentPreviewType = null; // 'photo' or 'video'
+    let currentPreviewType = null;
 
-    // Logo Image (Kept at top)
+    // Logo Image
     let logoImage = new Image();
     logoImage.crossOrigin = "anonymous";
     logoImage.src = "logo.png";
 
-    // Mini-Map Tile Image for GPS Camera corner stamp
+    // Mini-Map Tile
     let mapTileImage = new Image();
     mapTileImage.crossOrigin = "anonymous";
     let mapTileLoaded = false;
@@ -313,7 +311,7 @@
     mapTileImage.onload = () => { mapTileLoaded = true; };
     mapTileImage.onerror = () => { mapTileLoaded = false; };
 
-    // Strict Internet Time Synchronization (Not Phone Time)
+    // Strict Internet Time Synchronization
     window.exactServerBaseTime = null;
     window.serverSyncMark = null;
 
@@ -332,7 +330,7 @@
             window.serverSyncMark = Date.now();
             return;
           }
-        } catch(e) { /* try next fallback */ }
+        } catch(e) { /* fallback */ }
       }
       if (!window.exactServerBaseTime) {
         window.exactServerBaseTime = new Date();
@@ -348,14 +346,13 @@
       return new Date(window.exactServerBaseTime.getTime() + elapsed);
     }
 
-    // Header Clock
     setInterval(() => {
       const now = getExactCurrentTime();
       const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
       liveClock.innerText = `${timeStr} GMT +05:30`;
     }, 1000);
 
-    // Bulletproof Rounded Rectangle Helper
+    // Rounded Rectangle Helper
     function drawRoundRect(ctx, x, y, width, height, radius) {
       if (typeof ctx.roundRect === 'function') {
         ctx.beginPath();
@@ -375,15 +372,16 @@
       ctx.closePath();
     }
 
-    // Smooth Camera Setup
+    // Camera Stream
     async function startCamera() {
       if (currentStream) currentStream.getTracks().forEach(track => track.stop());
       
       const constraints = {
         video: {
           facingMode: { ideal: currentFacingMode },
+          aspectRatio: { ideal: 3 / 4 }, // Request 3:4 portrait directly
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 960 }
         },
         audio: true
       };
@@ -395,7 +393,7 @@
       } catch (err) {
         try {
           const streamNoAudio = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+            video: { facingMode: { ideal: currentFacingMode }, aspectRatio: { ideal: 3 / 4 }, width: { ideal: 1280 }, height: { ideal: 960 } },
             audio: false
           });
           currentStream = streamNoAudio;
@@ -434,7 +432,6 @@
       startCamera();
     }
 
-    // OpenStreetMap Satellite/Street Tile Calculation
     function updateMapTile(lat, lon) {
       const zoom = 16;
       const latRad = lat * Math.PI / 180;
@@ -450,7 +447,6 @@
       }
     }
 
-    // Geolocation & Granular Landmark Parsing (zoom=18)
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
         async (pos) => {
@@ -513,7 +509,7 @@
     }
 
     // =========================================================
-    // UNIFIED WATERMARK RENDERER (USED FOR BOTH PHOTO & VIDEO)
+    // UNIFIED WATERMARK RENDERER (TOP LOGO + BOTTOM CARD)
     // =========================================================
     function drawWatermarkTemplate(ctx, cw, ch) {
       // 1. Logo at Top-Left
@@ -536,7 +532,7 @@
       const marginX = Math.round(cw * 0.025);
       const marginY = Math.round(ch * 0.020);
       
-      const titleFont = Math.max(14, Math.round(cw * 0.038));  // ~20-22px on mobile
+      const titleFont = Math.max(14, Math.round(cw * 0.038));  // ~20-22px
       const bodyFont = Math.max(11, Math.round(cw * 0.027));   // ~15-16px
       const subFont = Math.max(10, Math.round(cw * 0.025));    // ~14px
       const lineSpacing = Math.max(4, Math.round(cw * 0.007));
@@ -554,12 +550,10 @@
       ctx.fillStyle = "rgba(34, 43, 58, 0.94)";
       ctx.fill();
 
-      // Subtle Outer Border
       ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // Clip inside card to cleanly round the gold stripe
       ctx.clip();
 
       // Left Vertical Brand Accent Stripe (Platoon Gold #f59e0b)
@@ -588,7 +582,6 @@
         drawFallbackGrid(ctx, mapX, mapY, mapSize);
       }
 
-      // Center Location Pin on Mini-Map
       const pinCenterX = mapX + (mapSize / 2);
       const pinCenterY = mapY + (mapSize / 2);
       ctx.font = `${Math.round(mapSize * 0.42)}px Arial, sans-serif`;
@@ -597,7 +590,6 @@
       ctx.fillText("📍", pinCenterX, pinCenterY - 2);
       ctx.restore();
 
-      // Mini-Map Border
       ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
       ctx.lineWidth = 1.2;
       drawRoundRect(ctx, mapX, mapY, mapSize, mapSize, mapRadius);
@@ -621,7 +613,7 @@
         return truncated + "...";
       }
 
-      // Line 1: Main Headline Location (Large, Bold, White)
+      // Line 1: Headline Location
       ctx.font = `bold ${titleFont}px system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = "#ffffff";
       ctx.fillText(fitText(currentHeadline, maxTextWidth), textX, curY);
@@ -669,9 +661,9 @@
       }
     }
 
-    // ==========================================
-    // PHOTO CAPTURE
-    // ==========================================
+    // =========================================================================
+    // PHOTO CAPTURE: EXACT 3:4 CROPPING (ELIMINATES ELONGATION & STRETCHING)
+    // =========================================================================
     function takeSnapshot() {
       if (!isGpsLocked) {
         alert("कृपया GPS लोकेशन आने का इंतज़ार करें (2-3 सेकंड)।\nPlease wait for the GPS location to lock before capturing.");
@@ -679,11 +671,13 @@
       }
 
       try {
-        if (video.videoWidth === 0) return;
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        if (!vw || !vh) return;
         
         currentPreviewType = 'photo';
         
-        // Switch UI to preview mode: Hide viewfinder and status panel, show auto-fitting preview container
+        // Switch UI to preview mode
         document.getElementById('viewfinder-wrapper').style.display = 'none';
         statusPanel.style.display = 'none';
         document.getElementById('preview-container').style.display = 'flex';
@@ -692,19 +686,38 @@
         document.getElementById('cameraControls').style.display = 'none';
         document.getElementById('previewControls').style.display = 'flex';
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // Calculate exact 3:4 crop matching the viewfinder's object-fit: cover
+        const targetRatio = 3 / 4;
+        const srcRatio = vw / vh;
+        let sx, sy, sWidth, sHeight;
+
+        if (srcRatio > targetRatio) {
+          sHeight = vh;
+          sWidth = Math.round(vh * targetRatio);
+          sx = Math.round((vw - sWidth) / 2);
+          sy = 0;
+        } else {
+          sWidth = vw;
+          sHeight = Math.round(vw / targetRatio);
+          sx = 0;
+          sy = Math.round((vh - sHeight) / 2);
+        }
+
+        // Set canvas to high-res 3:4 (e.g. 720x960 or 1080x1440)
+        const cw = Math.min(1080, sWidth);
+        const ch = Math.round(cw / targetRatio);
+
+        canvas.width = cw;
+        canvas.height = ch;
         const ctx = canvas.getContext('2d');
-        const cw = canvas.width;
-        const ch = canvas.height;
 
-        // 1. Draw raw camera frame
-        ctx.drawImage(video, 0, 0, cw, ch);
+        // Draw cropped 3:4 camera frame — 100% true to viewfinder framing, zero elongation!
+        ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, cw, ch);
 
-        // 2. Draw unified watermark (Logo at top + bottom template)
+        // Draw unified watermark
         drawWatermarkTemplate(ctx, cw, ch);
 
-        // 3. Convert to Blob for instant sharing
+        // Convert to Blob for instant sharing
         canvas.toBlob((blob) => {
           lastCapturedPhotoBlob = blob;
         }, 'image/jpeg', 0.95);
@@ -717,7 +730,7 @@
     }
 
     // ================================================================
-    // REAL-TIME WATERMARKED VIDEO RECORDING (HARDWARE 30FPS + SOUND)
+    // REAL-TIME WATERMARKED VIDEO RECORDING (3:4 PROPORTIONS + AUDIO)
     // ================================================================
     function getOptimalMimeType() {
       const types = [
@@ -747,24 +760,41 @@
       }
 
       recordedChunks = [];
-      const rw = video.videoWidth || 1280;
-      const rh = video.videoHeight || 720;
+      const vw = video.videoWidth || 720;
+      const vh = video.videoHeight || 960;
+      const targetRatio = 3 / 4;
+      const srcRatio = vw / vh;
+
+      let sx, sy, sWidth, sHeight;
+      if (srcRatio > targetRatio) {
+        sHeight = vh;
+        sWidth = Math.round(vh * targetRatio);
+        sx = Math.round((vw - sWidth) / 2);
+        sy = 0;
+      } else {
+        sWidth = vw;
+        sHeight = Math.round(vw / targetRatio);
+        sx = 0;
+        sy = Math.round((vh - sHeight) / 2);
+      }
+
+      const rw = 720;
+      const rh = Math.round(rw / targetRatio); // 960 (3:4)
       recCanvas.width = rw;
       recCanvas.height = rh;
       const recCtx = recCanvas.getContext('2d');
 
       isRecordingActive = true;
 
-      // Real-time canvas frame rendering loop (draws camera + live watermark on every frame!)
+      // Real-time canvas rendering loop matching 3:4 viewfinder
       function renderRecordingFrame() {
         if (!isRecordingActive) return;
-        recCtx.drawImage(video, 0, 0, rw, rh);
+        recCtx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, rw, rh);
         drawWatermarkTemplate(recCtx, rw, rh);
         requestAnimationFrame(renderRecordingFrame);
       }
       renderRecordingFrame();
 
-      // Combine real-time watermarked canvas video track with microphone audio track
       let streamToRecord = currentStream;
       if (typeof recCanvas.captureStream === 'function') {
         try {
@@ -776,7 +806,6 @@
             streamToRecord = canvasStream;
           }
         } catch (e) {
-          console.warn("captureStream fallback to camera stream", e);
           streamToRecord = currentStream;
         }
       }
@@ -785,7 +814,7 @@
       recordedVideoMime = mime || 'video/mp4';
 
       const recorderOptions = {
-        videoBitsPerSecond: 2500000 // 2.5 Mbps
+        videoBitsPerSecond: 2500000
       };
       if (mime) recorderOptions.mimeType = mime;
 
@@ -811,7 +840,6 @@
       mediaRecorder.start();
       recordSeconds = 0;
 
-      // UI Switch
       document.getElementById('cameraControls').style.display = 'none';
       document.getElementById('recordingControls').style.display = 'flex';
       recIndicator.style.display = 'flex';
@@ -850,7 +878,6 @@
     function showVideoPreview(blob) {
       currentPreviewType = 'video';
       
-      // Switch UI to preview mode: Hide viewfinder and status panel, show auto-fitting preview container
       document.getElementById('viewfinder-wrapper').style.display = 'none';
       statusPanel.style.display = 'none';
       document.getElementById('preview-container').style.display = 'flex';
@@ -883,7 +910,6 @@
           const blob = lastCapturedPhotoBlob || await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
           const file = new File([blob], `Platoon_Patrol_${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-          // Direct file share for mobile WhatsApp
           if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
               files: [file]
@@ -892,7 +918,6 @@
             return;
           }
 
-          // Fallback
           downloadBlob(blob, file.name);
           window.location.href = `whatsapp://send?text=${dutyReport}`;
           statusText.innerHTML = "✅ Photo saved! Opening WhatsApp...";
@@ -909,7 +934,6 @@
             return;
           }
 
-          // Fallback
           downloadBlob(recordedVideoBlob, file.name);
           window.location.href = `whatsapp://send?text=${dutyReport}`;
           statusText.innerHTML = "✅ Video saved! Opening WhatsApp...";
