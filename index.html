@@ -337,7 +337,7 @@
 
     function fallbackDownload() {
       const link = document.createElement('a');
-      link.download = `Platoon_Patrol_${Date.now()}.jpg`;
+      link.download = `Platoon_Digital_Patrol_${Date.now()}.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.95);
       link.click();
       statusText.innerHTML = "✅ <b>Saved!</b> Send to WhatsApp manually.";
